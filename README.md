@@ -1,6 +1,6 @@
 # 2026 CS 4379K / CS 5342 Introduction to Autonomous Robotics, Robotics and Autonomous Systems
 
-## Programming Assignment: Milestone 4 (V1.1)
+## Programming Assignment: Milestone 4 (V1.2)
 
 **Minhyuk Park and Tsz-Chiu Au**
 
@@ -48,9 +48,24 @@ Refer to the demo requirement section at the end of the milestone assignment on 
 
 > **Major Changes**
 > 
+> * v 1.2  The YOLO publisher, subscriber and the bottle pick-and-place script are now provided complete. No coding is required; you tune settings and run the experiments. Clone URL updated.
 > * v 1.1  Submission of source code was changed to optional as part of the request from the instructor.
 > * v 1.05  A lot of requested changes
 > * v 1.0  Initial public release
+
+---
+
+### Quick Start: Your Checklist
+
+You do not need to write any code in this assignment. All code is provided; you run it, change a few settings, and observe what happens. Follow the parts in order and tick them off as you record your video.
+
+- [ ] **Part 1:** Download the demo on the Jetson and run `yolov11_demo.py`. Run `tegrastats` in a second terminal. (Demo Part A)
+- [ ] **Part 2:** Run `yolo_publisher_sample_code.py` on the Jetson and `yolo_subscriber_sample_code.py` in another terminal. Try the settings in the table. (Demo Part B)
+- [ ] **Part 3:** Bring up the robot, run the publisher, set your arm poses in `bottle_pick_place.py`, then run it three times with `STAGE = "servo"`, `"pick"` and `"full"`. Tune the settings if needed. (Demo Part C a, b, c)
+
+**Use your Assignment 3 code.** Part 3 needs the arm poses and gripper values you already found in Assignment 3. Open your Assignment 3 `sample_code.py` and copy those values into the settings block of `bottle_pick_place.py` (details in Part 3).
+
+Before each run, check that the robot has space, the bottle is in the camera's view, and you are ready to press `Ctrl+C`.
 
 ---
 
@@ -85,7 +100,7 @@ tegrastats
 
 ```bash
 cd ~/
-git clone https://github.com/dmz44/Robotics_Assignment_4.git
+git clone https://github.com/MSIChowdhury/Robotics_Assignment_4.git
 
 ```
 
@@ -126,15 +141,31 @@ yolo11x.pt    yolo11x.engine
 
 ---
 
-### Part 2: Programming a publisher and a subscriber for YOLO
+### Part 2: Running a publisher and a subscriber for YOLO
 
-In order to complete part 3, you need to learn how to use ROS 2 to command the turtlebot using your own program. 
+In Part 3 the robot reacts to what YOLO sees, so the YOLO results have to be shared with other programs over ROS 2. We give you a complete **publisher** (reads the camera, runs YOLO and publishes the detections as a JSON string on `/yolo/detections_json`) and a complete **subscriber** (receives that JSON and prints it). You do not need to write any code. Read through the two files to see how a ROS 2 publisher and subscriber work.
 
-Take a look at the provided publisher and subscriber script for YOLO in the git repository. We are giving you sample codes, one for the subscriber and one for the publisher, to get you started. 
+1. **[Turtlebot Nvidia Jetson]** Start the publisher. Note that launching the publisher for the first time would take a lot of time, since it needs to download the weights from the internet. You can disconnect from the internet and connect back to small_blue_wifi once you are done downloading the weights from the initial run.
+```bash
+cd ~/Robotics_Assignment_4
+python3 yolo_publisher_sample_code.py
+```
 
-Onvr you have finished coding your publisher and subscriber by completing the skeleton code, execute the example code for the publisher on the Turtlebot Jetson, and execute the example code for the subscriber either on the Turtlebot Jetson or the Remote PC to test the functionality of the code.
+2. **[Turtlebot Nvidia Jetson or Remote PC]** In a new terminal, start the subscriber. On the Remote PC, first copy `yolo_subscriber_sample_code.py` into `~/turtlebot_docker/my_code` and run it from the Docker shell in `~/my_code`.
+```bash
+python3 yolo_subscriber_sample_code.py
+```
 
-Here is what you can expect from the completed skeleton code. **Note that launching the publisher for the first time would take a lot of time, since it needs to download the weights from the internet.** You can disconnect from the internet and connect back to small_blue_wifi once you are done downloading the weights from the initial run. 
+Point the camera at several objects. You should see output like the examples below.
+
+**Settings to try.** At the top of `yolo_publisher_sample_code.py` there is a settings block. Change one value at a time, restart the publisher, and note the effect (use `tegrastats` to watch the GPU).
+
+| Setting | Values to try | What to observe |
+| --- | --- | --- |
+| `MODEL_PATH` | `'yolo11n.pt'` (CUDA), `'yolo11n.engine'` (CUDA+TensorRT, copy the file from `Assignment_4_demo/CUDA_Demo` first), then `'yolo11s.pt'` | Loading time, how fast detections appear, GPU load, and detection quality |
+| `PUBLISH_PERIOD` | `0.05` (20 Hz), `0.2` (5 Hz) | How quickly the subscriber output updates |
+
+Here is what you can expect to see. **Note that launching the publisher for the first time would take a lot of time, since it needs to download the weights from the internet.** You can disconnect from the internet and connect back to small_blue_wifi once you are done downloading the weights from the initial run. 
 
 **Publisher(Option1:CUDA)**
 ```
@@ -207,26 +238,63 @@ Loading yolo11n.engine for TensorRT inference...
 ```
 **Subscriber**
 ```
-nvidia@nvidia-desktop:~$ python3 sub.py
+nvidia@nvidia-desktop:~$ python3 yolo_subscriber_sample_code.py
 [INFO] [1774133827.058645760] [yolo_json_subscriber]: Listening for YOLO JSON detections...
 [INFO] [1774133827.062601856] [yolo_json_subscriber]: Received 1 detections at t=1774133826.99 [camera_link]:
 [INFO] [1774133827.064806720] [yolo_json_subscriber]:   [0] book (0.32) | Center: (689.2, 239.0), Size: 474.2x196.6
 
 
 ```
-### Part 3: Programming a Custom Script for Physical Turtlebot3 Bottle Pick and Place
+### Part 3: Bottle Pick and Place on the Physical Turtlebot3
 
-In part 3, you need to extend your teleoperation code in Assignment 3 and ROS2 subscriber code in Assignment 4 to make the turtlebot autonomously detect, approach, and pick up and place the bottle from and to the ground. We recommend having a single custom script for part 3 of the assignment.
+In part 3 the turtlebot autonomously detects, approaches, picks up and places the bottle. It combines what you already used in Assignment 3 (Twist messages on `/cmd_vel` and the arm and gripper action clients) with the YOLO detections from Part 2. We provide the complete script `bottle_pick_place.py`. You do not need to write any code; you set a few values and tune them by experiment.
 
-In order to complete part 3, you need to learn how to use ROS 2 to command the turtlebot using your own program. 
+How it works: the script reads the bottle's bounding box from `/yolo/detections_json`. If the center of the box is left or right of the image center, it turns the wheels to bring it back (visual servoing). Once centered, it drives forward until the box is tall enough (the bottle is close). Then it moves the arm to home pose, opens the gripper, extends the arm forward, closes the gripper, and retracts the arm to home. To place the bottle it drives back to its start point (using odometry), extends the arm, opens the gripper, and retracts.
 
-To turn the turtlebot on its place, apply angular velocity in the Z axis so that the turtlebot can turn left or right.
+**Setup (do this once)**
 
-To move the turtlebot forward and backward, apply linear velocity so that the turtlebot can move forward or backward.
+1. **[Turtlebot Nvidia Jetson]** Bring up the robot, and in a second terminal start the YOLO publisher from Part 2.
+```bash
+ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
+```
+```bash
+cd ~/Robotics_Assignment_4
+python3 yolo_publisher_sample_code.py
+```
+2. **[Remote PC or Jetson]** Open `bottle_pick_place.py`. On the Remote PC, copy it to `~/turtlebot_docker/my_code` and run it from the Docker shell.
+3. **Copy these values from your Assignment 3 code** (your `sample_code.py` that you submitted) into the settings block of `bottle_pick_place.py`. These are the one change you must make; the defaults in the file are only placeholders.
 
-For the turtlebot to react to the camera input, you would need to subscribe to the YOLO output from the publisher you coded in Part 2, and apply control inputs to the turtlebot so that the target object, the bottle, stays at the center of the camera's field of view. Not only do you have to adjust the rotation of the turtlebot, but you would also need to drive forward and backward so that the detection box in pixel coordinates is in a certain range that you determined from your own experimentation. 
+| In `bottle_pick_place.py` | Copy from your Assignment 3 code |
+| --- | --- |
+| `HOME_POSE` | The `'9'` (Home) entry in `POSES` |
+| `EXTEND_POSE` | The `'0'` (Extend Forward) entry in `POSES` |
+| `GRIPPER_OPEN`, `GRIPPER_CLOSE` | The `'g'` and `'h'` values in `GRIPPER_KEY_BINDINGS` |
+| `FORWARD_VEL`, `SEARCH_ANGULAR_VEL` (optional) | Use `LIN_VEL_STEP_SIZE` and `ANG_VEL_STEP_SIZE` as a hint for slow speeds your robot handled well |
+4. Place the bottle on the ground in the camera's view, slightly off-center, and run the script. Press `Ctrl+C` at any time to stop the robot.
+```bash
+python3 bottle_pick_place.py
+```
 
-To pick up the bottle with the robot arm, move the robot arm to home pose, open the gripper, extend the arm forward, close the gripper, and retract the arm to the home position. Do the reverse for placing the bottle on the ground.
+**Run the three stages.** Change `STAGE` in the settings block between runs. These match demo parts C a), b) and c).
+
+| `STAGE` | What the robot does |
+| --- | --- |
+| `"servo"` | Turns the wheels so the bottle stays in the center of the image. It does not drive forward. Move the bottle slowly in front of the robot. |
+| `"pick"` | Servo, drive up to the bottle, grab it and lift it off the ground. |
+| `"full"` | Everything in `"pick"`, then return to the start point and place the bottle on the ground. |
+
+**Tune it.** If the robot does not behave well, change one value at a time in the settings block and run again.
+
+| Symptom | Setting to change |
+| --- | --- |
+| Robot wobbles left and right around the bottle | Lower `TURN_GAIN`, or raise `CENTER_TOLERANCE_PX` |
+| Robot reacts slowly or lags behind the bottle | Raise `TURN_GAIN` |
+| Robot stops too far from or too close to the bottle | Change `STOP_BBOX_HEIGHT`. Read the box height `h` from the subscriber of Part 2 when the bottle is at the right grabbing distance |
+| Robot drives too fast to track | Lower `FORWARD_VEL` |
+| Gripper misses or crushes the bottle | Adjust `EXTEND_POSE`, `GRIPPER_CLOSE` (start from your Assignment 3 values) |
+| Bottle is detected as another object (e.g. a teddy bear as a donut) | Add the extra labels to `TARGET_CLASSES` |
+| Detections flicker | Raise `MIN_CONFIDENCE` |
+| Robot does not get back to its start point | Change `RETURN_VEL`, `HOME_TOLERANCE` |
 
 ---
 
@@ -253,18 +321,18 @@ This part showcases your ability to integrate the given ROS2 code for a robotic 
 
 * a): Demonstrating Visual Servoing to a Bottle (Task 1) -20 points
 
-For part C's a), you need to code a visual servoing code that turns the wheels of the Turtlebot 3 so that the front of the robot faces the target object, a bottle.
+For part C's a), run `bottle_pick_place.py` with `STAGE = "servo"`. It turns the wheels of the Turtlebot 3 so that the front of the robot faces the target object, a bottle.
 
 Demonstrate your code by moving the bottle slowly in front of the robot. The robot should "lock onto" the bottle and attempt to keep the subject at the center of the camera's field of view using the robot's wheels to turn left and right.
 
 * b): Pick the bottle with Turtlebot (Task 1) -30 points
 
-For part C's b), you need to extend a)’s code so that the Turtlebot 3 faces the bottle, drives towards the bottle, extends the arm, grabs onto the bottle, and lifts it off the ground. You can achieve this by publishing twist messages to control the wheels and using an action server and client to control the arm in the joint space. To test, place the bottle on the ground in the field of view of the Turtlebot's camera, but slightly off-center. 
+For part C's b), run `bottle_pick_place.py` with `STAGE = "pick"`. The Turtlebot 3 faces the bottle, drives towards the bottle, extends the arm, grabs onto the bottle, and lifts it off the ground. In your narration, briefly explain the settings you tuned and why. To test, place the bottle on the ground in the field of view of the Turtlebot's camera, but slightly off-center. 
 
 
 * c): Pick and Place with Turtlebot (Task 2) -20 points
 
-For part C's c), you need to extend b)’s code so that the Turtlebot 3 returns to the base you define after picking up the bottle, and release the bottle on the ground at the home base near the robot's starting location. To test, refer to part C's b). 
+For part C's c), run `bottle_pick_place.py` with `STAGE = "full"`. The Turtlebot 3 returns to the base you define after picking up the bottle, and release the bottle on the ground at the home base near the robot's starting location. To test, refer to part C's b). 
 
 ---
 

@@ -3,62 +3,47 @@
 
 # YOLO Publisher code for Jetson NX.
 
-# This code will give you an introduction to coding in ROS2. You are required to modify it for the assignment requirement and submit the source code on Canvas.
+# This code is complete and runs as-is. Read through it to see how a ROS2 publisher works.
+# The only things you may want to change are the settings right below the imports.
 
 # Refer to the Lab PowerPoint materials and Appendix of Assignment 3 to learn more about coding on ROS2 and the hardware architecture of Turtlebot3.
 # You have to run this code on Turtlebot3 Nvidia Jetson.
 # You would need a basic understanding of Python Data Structure and Object Oriented Programming, along with ROS2 concepts, to understand this code.
 
-# This will be a harder coding assignment compared to Milestone Assignment 3.
-# We recommend doing a revision on the Milestone Assignment 3 code to get a hang of coding in ROS2.
-
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String  
+from std_msgs.msg import String
 import cv2
-import json  
+import json
 from ultralytics import YOLO
+
+##############################################################################
+# Settings you can tune
+# MODEL_PATH:
+#   'yolo11n.pt'      CUDA - Nvidia GPU without optimizations (downloads on the first run).
+#   'yolo11n.engine'  CUDA+TensorRT - optimized. Copy the .engine file from
+#                     Assignment_4_demo/CUDA_Demo into the same folder as this script first.
+#   Larger models (yolo11s, yolo11m, ...) are slower but more accurate.
+MODEL_PATH = 'yolo11n.pt'
+# PUBLISH_PERIOD: seconds between camera frames (0.05 = 20 Hz).
+PUBLISH_PERIOD = 0.05
+##############################################################################
 
 class YoloJsonPublisher(Node):
     def __init__(self):
-        ###############################################################
-        # TODO 1: Initialize the Node with the name 'yolo_json_publisher'
-        # Hint: super().__init__('your_node_name_here')
-      
-        ###############################################################
+        super().__init__('yolo_json_publisher')
 
+        # Publish detections as a JSON string on this topic.
+        self.publisher_ = self.create_publisher(String, '/yolo/detections_json', 10)
 
-      
-        ###############################################################
-        # TODO 2: Create a publisher that sends standard String messages
-        # Hint: self.create_publisher(MessageType, 'topic_name', queue_size)
-        # We want to publish a String, to '/yolo/detections_json', with a queue of 10
-        
-        # self.publisher_ = 
-        ###############################################################
-        
         # Load YOLOv11 base model (Not Pose, Not Seg) onto the Jetson's GPU
         self.get_logger().info("Loading YOLOv11 model on CUDA...")
-        
-        ###############################################################
-        # TODO 3: Select a model name and size to run. yolo11n (nano) would serve you well, but you can use a different model.
-        # Also, select the optimization level you want for YOLO v11
-        # CUDA - Use Nvidia GPU without optimizations
-        # CUDA+TensorRT - Use Nvidia GPU with performance optimization
+        if MODEL_PATH.endswith('.engine'):
+            self.model = YOLO(MODEL_PATH, task='detect')
+        else:
+            self.model = YOLO(MODEL_PATH)
+            self.model.to('cuda:0')
 
-        # Note: It would take a long time to load the model when it is your first time. 
-        
-        # Option 1: CUDA:               self.model = YOLO('yolo11n.pt')
-        #                               self.model.to('cuda:0')
-        
-        # Works only if you have created the engine file using the provided demo code and copied it to the same folder as this code.
-        # Option 2: CUDA+TensorRT:      self.model = YOLO('yolo11n.engine') 
-        
-        # self.model =
-
-        ###############################################################
-        
-        
         # GStreamer pipeline for Raspberry Pi V2 Camera on Jetson CSI port
         gstreamer_pipeline = (
             "nvarguscamerasrc ! "
@@ -68,18 +53,15 @@ class YoloJsonPublisher(Node):
             "videoconvert ! "
             "video/x-raw, format=(string)BGR ! appsink"
         )
-        
+
+        self.get_logger().info("Initializing CSI Camera...")
         self.cap = cv2.VideoCapture(gstreamer_pipeline, cv2.CAP_GSTREAMER)
         if not self.cap.isOpened():
             self.get_logger().error("Failed to open camera.")
             return
-        ###############################################################
-        # TODO 4: Create a timer that triggers your callback function to capture frames
-        # Hint: self.create_timer(timer_period_in_seconds, callback_function)
-        # Set it to run every 0.05 seconds (20 Hz), and call `self.timer_callback`
-        # self.timer = 
-  
-        ###############################################################
+
+        # Capture a frame, run YOLO and publish every PUBLISH_PERIOD seconds.
+        self.timer = self.create_timer(PUBLISH_PERIOD, self.timer_callback)
 
     def timer_callback(self):
         ret, frame = self.cap.read()
@@ -93,6 +75,8 @@ class YoloJsonPublisher(Node):
         detection_data = {
             "timestamp": self.get_clock().now().nanoseconds / 1e9,
             "frame_id": "camera_link",
+            "image_width": frame.shape[1],
+            "image_height": frame.shape[0],
             "detections": []
         }
 
@@ -107,53 +91,28 @@ class YoloJsonPublisher(Node):
                 "confidence": confidence,
                 "bbox": {"cx": x_center, "cy": y_center, "w": width, "h": height}
             })
-            
-        ###############################################################
-        # TODO 5: Convert the `detection_data` Python dictionary into a JSON formatted string
-        # Hint: Use the json.dumps() function
-        # json_str = 
-      
-        ###############################################################
-      
-        ###############################################################
-        # TODO 6: Create your ROS 2 String message and publish it
-        # Hint:
-        # msg = String()
-        # msg.data = your_json_string
-        # self.publisher_.publish(msg_variable)
-      
-        # msg = 
-        # msg.data = 
-        # self.publisher_.publish()
-        ###############################################################
+
+        # Convert the dictionary into a JSON string, wrap it in a String message and publish it.
+        msg = String()
+        msg.data = json.dumps(detection_data)
+        self.publisher_.publish(msg)
 
     def destroy_node(self):
-        self.cap.release()
+        if hasattr(self, 'cap'):
+            self.cap.release()
         super().destroy_node()
 
 def main(args=None):
-    
-        ###############################################################
-        # TODO 7: Initialize the ROS 2 Python client library
-        # Hint: rclpy.init with necessary arguments (args)
-        
-        ###############################################################
-    
-        node = YoloJsonPublisher()
-        
-        try:
-            
-            ###############################################################
-            # TODO 8: Spin the node so it stays alive and continues to trigger the timer
-            # Hint: rclpy.spin with the necessary arguments that define what to spin
-          
-            ###############################################################
-            
-        except KeyboardInterrupt:
-            pass
-        finally:
-            node.destroy_node()
-            rclpy.shutdown()
+    rclpy.init(args=args)
+    node = YoloJsonPublisher()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
