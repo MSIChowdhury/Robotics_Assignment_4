@@ -1,478 +1,498 @@
-# 2026 CS 4379K / CS 5342 Introduction to Autonomous Robotics, Robotics and Autonomous Systems
+# CS7389K Advanced Robotics and Autonomous Systems
 
-## Programming Assignment: Milestone 4 (V1.2)
+## Milestone 4: Teaching Your Robot to See and Pick Up a Bottle (YOLO)
 
-**Minhyuk Park and Tsz-Chiu Au**
+**Author:** MD Sameer Iqbal Chowdhury
 
-### Introduction
+## What is this assignment?
 
-In this fourth milestone, you will learn how to use YOLO, a real-time object detection algorithm based on a fully Convolutional Neural Network. YOLO’s input is a camera image fed in real time from a Raspberry Pi v2 camera, and the output would be a bounding box showing which part of the image belongs to which object, with a text label. You will find the tracking accuracy of YOLO to be acceptable, but you will find that labeling may not always be correct. This is because the generic YOLO model is trained on the Microsoft COCO dataset.
+You will give your TurtleBot **eyes**. A camera and a program called **YOLO** find objects in the picture. Then the robot turns toward a bottle, drives up to it, picks it up, and carries it back. You do not need to write any code. You will run programs, change a few numbers, and watch what happens.
 
-To do this, you will deploy our pre-configured Docker container that sets up all the software that is required for the assignment.
-Please refer to the following video for an explanation of what a Docker container environment is. 
+| Tool | What it does |
+| --- | --- |
+| **YOLO** | Looks at a camera picture and draws a box around each object it knows, with a name tag |
+| **Publisher / Subscriber** | One program shouts what YOLO sees. Another program listens |
+| **`bottle_pick_place.py`** | The ready-made program that moves the robot toward the bottle |
 
-[https://www.youtube.com/watch?v=Gjnup-PuquQ](https://www.youtube.com/watch?v=Gjnup-PuquQ)
+**How to use this page:** do the steps in order, one at a time. Each step tells you what to do, what you should see, and what you learn. Compare your screen with the "You should see" box. Small differences (numbers, timestamps, which objects it sees) are normal.
 
-Robot Operating System version is associated with Ubuntu Long-Term Support Versions (e.g. Ubuntu 22.04 with Humble). We are using **ROS 2 Humble in a Docker environment** for Remote-PC. You might find the official tutorial on ROS 2 Humble useful in this course:
+Two places are used. **[Jetson]** is the small computer on the robot (type in its normal terminal, no Docker). **[Remote PC]** is your laptop (type inside the Docker container from Assignment 1).
 
-[https://docs.ros.org/en/humble/Tutorials.html](https://docs.ros.org/en/humble/Tutorials.html)
+**What you hand in:** 5 short video clips, uploaded to YouTube (Unlisted), with the 5 links pasted into Canvas. The full checklist is in the last step.
 
-For all questions regarding milestone assignments and the robot, **you should contact the Doctoral Instructor Assistant via direct message on Slack**. Please do not contact the Instructor with questions regarding the milestone assignments. This is the URL for Slack for this course. 
-
-<https://spring2026txstrobot.slack.com/>
-
-Please head here for an introduction to the YOLO Computer Vision Object Detection Algorithm.
-[https://docs.ultralytics.com/](https://docs.ultralytics.com/)
-
-### Assignment requirement 
-
-A **hardware video demonstration submission** is required for Milestone Assignment 4. 
-
-You need to demonstrate that you have a working setup and can operate the turtlebot by making videos. This will also demonstrate that you have a working setup for working with a physical turtlebot. Refer to the demo requirement section at the end of the milestone assignment on what to include in the video.
-
-**[SUBMISSION RULES]**
-
-* **Individual Submission:** **Every team member must submit the video link(s) separately to Canvas.** If the video is duplicated within a team, that is acceptable; however, this ensures that only active participants who have access to the team’s recordings can receive credit. 
-
-* **Standardized Hosting:** **To manage file sizes, do not upload raw video files (e.g., MP4) directly to Canvas.** Instead, **upload your videos to YouTube (set as "Unlisted")** and submit the links via a document.
-
-### Video Demo Requirements
-
-Your group will **record** one or more video clips. The estimated total length of the video clips is approximately three and a half minutes. **While you do not need to perform complex editing, please keep the total duration to a few minutes to ensure it remains concise.** One group member should narrate the video, explaining each step as it's performed. At the beginning of the first video clip, please show every group member's face and state the names of all group members.
-
-Your recording setup should be organized to show all relevant windows at once: the terminal(s) used for launching nodes, the Gazebo simulation window, and the RViz visualization window.
-
-You do not need to edit the videos, and uploading raw **footage** will suffice. You can split the demonstration into multiple videos **if necessary to show different parts of the requirement.** 
-
-Refer to the demo requirement section at the end of the milestone assignment on what to include in the demo. Rules for robot usage will apply for working with the physical Turtlebot3. Please refer to the inventory list given to you separately.
-
-> **Major Changes**
-> 
-> * v 1.2  The YOLO publisher, subscriber and the bottle pick-and-place script are now provided complete. No coding is required; you tune settings and run the experiments. Clone URL updated.
-> * v 1.1  Submission of source code was changed to optional as part of the request from the instructor.
-> * v 1.05  A lot of requested changes
-> * v 1.0  Initial public release
+Questions? Send a direct message to the Doctoral Instructor Assistant on Slack. Please do not email the instructor about the milestones.
 
 ---
 
-### Quick Start: Your Checklist
+## Step 1 (Optional): Watch a video about Docker
 
-You do not need to write any code in this assignment. All code is provided; you run it, change a few settings, and observe what happens. Follow the parts in order and tick them off as you record your video.
+**Watch (optional):** <https://www.youtube.com/watch?v=Gjnup-PuquQ>
 
-- [ ] **Part 1:** Download the demo on the Jetson and run `yolov11_demo.py`. Run `tegrastats` in a second terminal. (Demo Part A)
-- [ ] **Part 2:** Run `yolo_publisher_sample_code.py` on the Jetson and `yolo_subscriber_sample_code.py` in another terminal. Try the settings in the table. (Demo Part B)
-- [ ] **Part 3:** Bring up the robot, run the publisher, set your arm poses in `bottle_pick_place.py`, then run it three times with `STAGE = "servo"`, `"pick"` and `"full"`. Tune the settings if needed. (Demo Part C a, b, c)
+You already did this in Assignment 1, so skip it if you remember what Docker is.
 
-**Use your Assignment 3 code.** Part 3 needs the arm poses and gripper values you already found in Assignment 3. Open your Assignment 3 `sample_code.py` and copy those values into the settings block of `bottle_pick_place.py` (details in Part 3).
-
-Before each run, check that the robot has space, the bottle is in the camera's view, and you are ready to press `Ctrl+C`.
+**What you learn:** A Docker container is like a small, separate computer running inside your laptop. You will use it later for the robot's driving program.
 
 ---
 
-### Objects Provided
+## Step 2: Read about YOLO
 
-In order to complete the demonstration requirements outlined below, we are providing you with a few objects. The objects provided are shown below.
+**Read:** <https://docs.ultralytics.com/>  (the first page is enough)
 
-* Bottle
-* Bear Doll
-* Computer Mouse
+**What you learn:** YOLO ("You Only Look Once") finds and names many objects in a picture in one quick pass, fast enough to run on live video. It was trained on a set of photos called COCO, so it only knows the 80 kinds of things in that set, and it sometimes names things wrongly (for example a teddy bear as a donut).
 
-These object was chosen after testing with generic MS COCO trained yolo v11 on various angles and distances for the most stable inference results. You will find that under certain conditions, YOLO can detect but mislabel objects. You might have to consider multiple labels from YOLO’s COCO dataset to be a particular object of interest (e.g., a Teddy bear can be detected as a donut if the camera view is not just right. You can have some logic, such as if teddy bear and donut, this is a bear doll).
+---
 
-### Part 1: Object Detection on Jetson Demo with CUDA and TensorRT 
+## Step 3: Watch the Jetson's workload
 
-Part 1 will show you how to run YOLO, a popular object detection and localization algorithm on the Jetson NX. Jetson allows developers to start developing Artificial Intelligence applications on Edge devices with familiar tools present on a normal desktop environment for Nvidia GPUs.
+**Do:** **[Jetson]** Open a terminal and start this. Leave it running for the whole assignment.
 
-To quote Nvidia, Jetson Xavier NX delivers up to 21 TOPS, making it ideal for high-performance compute and AI in embedded and edge systems. You get the performance of 384 NVIDIA CUDA® Cores, 48 Tensor Cores, 6 Carmel ARM CPUs, and two NVIDIA Deep Learning Accelerators (NVDLA) engines. Combined with over 59.7GB/s of memory bandwidth, video encode, and decode, these features make Jetson Xavier NX the platform of choice to run multiple modern neural networks in parallel and process high-resolution data from multiple sensors simultaneously.
-
-This assumes that you have a working setup from Milestone Assignment 1 Part 1. Please execute all instructions with **[Remote PC]** on Docker shell. Note that you have to enable GUI and start the Docker container by following instruction from Milestone Assignment 1. Please execute all instructions with **[Turtlebot Nvidia Jetson]** on Turtlebot Jetson's native bash shell without Docker.
-
-The following instructions are from our own and not from online sources. Please follow carefully and ask the IA for assistance should you face any problems.
-
-1. **[Turtlebot Nvidia Jeston]** On Jetson, you can look at CPU and GPU usage in real-time by using the following command on a separate terminal window. CPU will show real-time CPU load, and GR3D_FREQ will give you an idea for real-time GPU load. You can run this on another terminal window.
 ```bash
 tegrastats
-
 ```
 
+**You should see:** one line of numbers every second.
 
-2. **[Turtlebot Nvidia Jeston]** While connected to the internet, git clone and download the demo in Turtlebot's Nvidia Jetson. 
+```text
+RAM 2874/7773MB (lfb 4x4MB) SWAP 0/3886MB CPU [12%@1190,8%@1190,5%@1190,6%@1190,off,off] GR3D_FREQ 0% ...
+```
+
+**What you learn:** `CPU` shows how busy the processor is. `GR3D_FREQ` is how busy the graphics chip (GPU) is. When YOLO runs, `GR3D_FREQ` should jump up. That is your proof that the GPU is doing the work.
+
+---
+
+## Step 4: Download the assignment files
+
+**Do:** **[Jetson]** Open a **second** terminal and download the repo.
 
 ```bash
 cd ~/
 git clone https://github.com/MSIChowdhury/Robotics_Assignment_4.git
-
 ```
 
+**You should see:**
 
-3. **[Turtlebot Nvidia Jeston]** Go to the folder in a new terminal window
+```text
+Cloning into 'Robotics_Assignment_4'...
+remote: Enumerating objects: 40, done.
+Receiving objects: 100% (40/40), 18.2 MiB | 6.1 MiB/s, done.
+```
+
+**Do:** **[Remote PC]** On your laptop, open a normal terminal (not in Docker) and download the same repo into the folder that Docker shares.
+
+```bash
+cd ~/turtlebot_docker/my_code
+git clone https://github.com/MSIChowdhury/Robotics_Assignment_4.git
+```
+
+**What you learn:** The Jetson runs the camera and YOLO. The laptop will run the driving program, so both need the files. Whatever is in `~/turtlebot_docker/my_code` on the laptop appears as `~/my_code` inside Docker.
+
+---
+
+## Step 5: See YOLO work on the camera
+
+**Do:** **[Jetson]** Go to the demo folder and run the demo. Point the camera at a few objects (a person, a bottle, a laptop). Press `Esc` on the video window to quit.
+
 ```bash
 cd ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo
-```
-
-
-4. **[Turtlebot Nvidia Jeston]** Run yolo v11 demo and point the camera in front of the robot at various objects. You should see real-time bounding boxes and class labels. **It is highly recommended for you to do this step every time before coding your custom scripts involving Jetson's camera to verify the operation of the hardware.**
-```bash
 python3 yolov11_demo.py
-
 ```
 
+**You should see:** a video window with boxes and labels around the objects, like `bottle 0.87` or `person 0.92`. The number is how sure YOLO is (1.00 means very sure). In the `tegrastats` window, `GR3D_FREQ` rises.
 
-**[Optional][Turtlebot Nvidia Jeston]** YOLO has different-sized models with different computational requirements for real-time performance. We encourage you to experiment with different models for each script by replacing the names for engine and pt with different model names corresponding to size of the models. Listed from smallest to largest, these models trade inference speed and accuracy. After you replace the names, the Ultralytics package will automatically download and generate relevant files for you. Note that your frame per second would be bottlenecked by the camera’s sensor mode.
+```text
+GR3D_FREQ 62% ...
+```
 
-The following mentions the relevant code section. Please change the names of both the pt and engine files.
+**What you learn:** YOLO is working on the robot's own camera and GPU. **Run this demo every time before using the camera in later steps.** If it fails, the camera or cable is the problem, not your later steps.
+
+---
+
+## Step 6: Try a different YOLO model size (optional)
+
+**Do:** **[Jetson]** YOLO comes in five sizes. Pick one from the list, open `yolov11_demo.py` and find these two lines:
 
 ```python
 ENGINE = "yolo11n.engine"
 PT     = "yolo11n.pt"
-
 ```
 
-**YOLO v11 base**
+Change **both** names to the same size, save, and run the demo again.
+
+| Size | `PT` name | `ENGINE` name | Parameters (about) | What to expect |
+| --- | --- | --- | --- | --- |
+| Nano (default) | `yolo11n.pt` | `yolo11n.engine` | 2.6 M | Fastest, least accurate |
+| Small | `yolo11s.pt` | `yolo11s.engine` | 9.4 M | A bit slower, more accurate |
+| Medium | `yolo11m.pt` | `yolo11m.engine` | 20 M | Slower again |
+| Large | `yolo11l.pt` | `yolo11l.engine` | 25 M | Slow on the Jetson |
+| Extra large | `yolo11x.pt` | `yolo11x.engine` | 57 M | Slowest, most accurate |
+
+**Example:** to try the Small model, the lines become:
+
+```python
+ENGINE = "yolo11s.engine"
+PT     = "yolo11s.pt"
+```
+
+```bash
+python3 yolov11_demo.py
+```
+
+**You should see:** the first run of a new size takes a few minutes. The program downloads the `.pt` file and converts it into an `.engine` file (this is the "export"). Later runs start quickly because the `.engine` file now exists.
 
 ```text
-yolo11n.pt    yolo11n.engine
-yolo11s.pt    yolo11s.engine
-yolo11m.pt    yolo11m.engine
-yolo11l.pt    yolo11l.engine
-yolo11x.pt    yolo11x.engine
-
+[INFO] yolo11s.engine not found, exporting from yolo11s.pt …
+Downloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt to 'yolo11s.pt'...
+...
 ```
+
+Then the same video window as Step 5 appears. Compare it with the Nano model: how smooth is the video, and how high does `GR3D_FREQ` go in `tegrastats`? Put the names back to `yolo11n` when you are done.
+
+**What you learn:** Bigger models are usually more accurate but slower and use more GPU. The robot needs quick reactions, so a small model is often the better choice.
 
 ---
 
-### Part 2: Running a publisher and a subscriber for YOLO
+## Step 7: 🎥 Record Clip 1: YOLO on the Jetson (Part A)
 
-In Part 3 the robot reacts to what YOLO sees, so the YOLO results have to be shared with other programs over ROS 2. We give you a complete **publisher** (reads the camera, runs YOLO and publishes the detections as a JSON string on `/yolo/detections_json`) and a complete **subscriber** (receives that JSON and prints it). You do not need to write any code. Read through the two files to see how a ROS 2 publisher and subscriber work.
+**Do:** Film this with a phone or camera. The film must show the **computer screen** and the **robot** while one team member narrates. **At the very start, show the face of every team member and say everyone's name.** Then run `python3 yolov11_demo.py` again. Point the robot's camera at several objects (for example a person, a bottle, a laptop). Keep the `tegrastats` window visible next to the video window. Say out loud what you see.
 
-1. **[Turtlebot Nvidia Jetson]** Start the publisher. Note that launching the publisher for the first time would take a lot of time, since it needs to download the weights from the internet. You can disconnect from the internet and connect back to small_blue_wifi once you are done downloading the weights from the initial run.
+**You should see (and show in the video):** boxes and labels on the objects, and `GR3D_FREQ` going up while the model runs.
+
+**What you learn:** Showing `tegrastats` is your proof that the model ran on the GPU. Keep the clip short, about one minute.
+
+---
+
+## Step 8: Start the YOLO publisher
+
+**Do:** **[Jetson]** In a terminal, start the publisher. It reads the camera, runs YOLO, and sends out the results. The first run downloads the model weights, so it needs the internet and takes a while. After that you can go back to `small_blue_wifi`.
+
 ```bash
 cd ~/Robotics_Assignment_4
 python3 yolo_publisher_sample_code.py
 ```
 
-2. **[Turtlebot Nvidia Jetson or Remote PC]** In a new terminal, start the subscriber. On the Remote PC, first copy `yolo_subscriber_sample_code.py` into `~/turtlebot_docker/my_code` and run it from the Docker shell in `~/my_code`.
-```bash
-python3 yolo_subscriber_sample_code.py
-```
+**You should see:** (long camera lines will scroll past, which is normal)
 
-Point the camera at several objects. You should see output like the examples below.
-
-**Settings to try.** At the top of `yolo_publisher_sample_code.py` there is a settings block. Change one value at a time, restart the publisher, and note the effect (use `tegrastats` to watch the GPU).
-
-| Setting | Values to try | What to observe |
-| --- | --- | --- |
-| `MODEL_PATH` | `'yolo11n.pt'` (CUDA), `'yolo11n.engine'` (CUDA+TensorRT, copy the file from `Assignment_4_demo/CUDA_Demo` first), then `'yolo11s.pt'` | Loading time, how fast detections appear, GPU load, and detection quality |
-| `PUBLISH_PERIOD` | `0.05` (20 Hz), `0.2` (5 Hz) | How quickly the subscriber output updates |
-
-Here is what you can expect to see. **Note that launching the publisher for the first time would take a lot of time, since it needs to download the weights from the internet.** You can disconnect from the internet and connect back to small_blue_wifi once you are done downloading the weights from the initial run. 
-
-**Publisher(Option1:CUDA)**
-```
+```text
 [INFO] [1774133694.824883296] [yolo_json_publisher]: Loading YOLOv11 model on CUDA...
 Downloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt to 'yolo11n.pt'...
 100%|██████████████████████████████████████| 5.35M/5.35M [00:00<00:00, 9.65MB/s]
 [INFO] [1774133708.662359424] [yolo_json_publisher]: Initializing CSI Camera...
 GST_ARGUS: Creating output stream
-CONSUMER: Waiting until producer is connected...
-GST_ARGUS: Available Sensor modes :
-GST_ARGUS: 3280 x 2464 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 3280 x 1848 FR = 28.000001 fps Duration = 35714284 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 1920 x 1080 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 1640 x 1232 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 1280 x 720 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: Running with following settings:
-   Camera index = 0
-   Camera mode  = 4
-   Output Stream W = 1280 H = 720
-   seconds to Run	= 0
-   Frame Rate = 59.999999
-GST_ARGUS: Setup Complete, Starting captures for 0 seconds
-GST_ARGUS: Starting repeat capture requests.
 CONSUMER: Producer has connected; continuing.
-[ WARN:0@42.505] global /home/nvidia/workspace/opencv-4.6.0/modules/videoio/src/cap_gstreamer.cpp (1405) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
-
 ```
-**Publisher(Option2:TensorRT_Optimized)**
+
+**What you learn:** A *publisher* is a program that keeps sending out information. This one sends out a short text message about every object YOLO sees, 20 times a second, on a "channel" called `/yolo/detections_json`. Other programs can tune in to that channel.
+
+---
+
+## Step 9: Start the YOLO subscriber
+
+**Do:** **[Jetson]** Open a **new** terminal and start the subscriber. Point the camera at a few objects.
+
+```bash
+cd ~/Robotics_Assignment_4
+python3 yolo_subscriber_sample_code.py
 ```
-[INFO] [1774134507.980644608] [yolo_json_publisher]: Loading YOLOv11 model on CUDA...
-WARNING ⚠️ Unable to automatically guess model task, assuming 'task=detect'. Explicitly define task for your model, i.e. 'task=detect', 'segment', 'classify','pose' or 'obb'.
-[INFO] [1774134507.984752448] [yolo_json_publisher]: Initializing CSI Camera...
-GST_ARGUS: Creating output stream
-CONSUMER: Waiting until producer is connected...
-GST_ARGUS: Available Sensor modes :
-GST_ARGUS: 3280 x 2464 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
 
-GST_ARGUS: 3280 x 1848 FR = 28.000001 fps Duration = 35714284 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
+**You should see:** one block of lines for each camera picture, naming each object, how sure YOLO is, and where the box is.
 
-GST_ARGUS: 1920 x 1080 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 1640 x 1232 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: 1280 x 720 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-GST_ARGUS: Running with following settings:
-   Camera index = 0
-   Camera mode  = 4
-   Output Stream W = 1280 H = 720
-   seconds to Run	= 0
-   Frame Rate = 59.999999
-GST_ARGUS: Setup Complete, Starting captures for 0 seconds
-GST_ARGUS: Starting repeat capture requests.
-CONSUMER: Producer has connected; continuing.
-[ WARN:0@9.734] global /home/nvidia/workspace/opencv-4.6.0/modules/videoio/src/cap_gstreamer.cpp (1405) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
-Loading yolo11n.engine for TensorRT inference...
-[03/21/2026-18:08:39] [TRT] [I] Loaded engine size: 13 MiB
-[03/21/2026-18:08:39] [TRT] [W] Using an engine plan file across different models of devices is not recommended and is likely to affect performance or even cause errors.
-[03/21/2026-18:08:45] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +342, GPU +237, now: CPU 717, GPU 4728 (MiB)
-[03/21/2026-18:08:45] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in engine deserialization: CPU +0, GPU +14, now: CPU 0, GPU 14 (MiB)
-[03/21/2026-18:08:46] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +0, now: CPU 704, GPU 4730 (MiB)
-[03/21/2026-18:08:46] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +142, now: CPU 0, GPU 156 (MiB)
-
-
-```
-**Subscriber**
-```
-nvidia@nvidia-desktop:~$ python3 yolo_subscriber_sample_code.py
+```text
 [INFO] [1774133827.058645760] [yolo_json_subscriber]: Listening for YOLO JSON detections...
 [INFO] [1774133827.062601856] [yolo_json_subscriber]: Received 1 detections at t=1774133826.99 [camera_link]:
-[INFO] [1774133827.064806720] [yolo_json_subscriber]:   [0] book (0.32) | Center: (689.2, 239.0), Size: 474.2x196.6
-
-
+[INFO] [1774133827.064806720] [yolo_json_subscriber]:   [0] bottle (0.87) | Center: (689.2, 239.0), Size: 180.4x412.7
 ```
-### Part 3: Bottle Pick and Place on the Physical Turtlebot3
 
-In part 3 the turtlebot autonomously detects, approaches, picks up and places the bottle. It combines what you already used in Assignment 3 (Twist messages on `/cmd_vel` and the arm and gripper action clients) with the YOLO detections from Part 2. We provide the complete script `bottle_pick_place.py`. You do not need to write any code; you set a few values and tune them by experiment.
+**What you learn:** A *subscriber* is a program that listens to a channel. Here is how to read the last line:
+- `bottle (0.87)`: what YOLO sees, and how sure it is.
+- `Center: (689.2, 239.0)`: where the middle of the box is, in pixels. The picture is 1280 wide, so the middle of the picture is `640`.
+- `Size: 180.4x412.7`: the box is 180 pixels wide and 412 tall. **The bigger the box, the closer the object.** The robot will use exactly this to find the bottle and to know when it is close enough.
 
-How it works: the script reads the bottle's bounding box from `/yolo/detections_json`. If the center of the box is left or right of the image center, it turns the wheels to bring it back (visual servoing). Once centered, it drives forward until the box is tall enough (the bottle is close). Then it moves the arm to home pose, opens the gripper, extends the arm forward, closes the gripper, and retracts the arm to home. To place the bottle it drives back to its start point (using odometry), extends the arm, opens the gripper, and retracts.
+---
 
-**Setup (do this once)**
+## Step 10: Change the publisher's settings
 
-1. **[Turtlebot Nvidia Jetson]** Bring up the robot, and in a second terminal start the YOLO publisher from Part 2.
+**Do:** **[Jetson]** Stop the publisher (`Ctrl+C`). Open `yolo_publisher_sample_code.py` and find the settings block near the top. Change **one** value, start the publisher again, and watch the subscriber and `tegrastats`.
+
+```python
+MODEL_PATH = 'yolo11n.pt'
+PUBLISH_PERIOD = 0.05
+```
+
+| Setting | Try this | What to notice |
+| --- | --- | --- |
+| `MODEL_PATH` | `'yolo11n.engine'` (a faster, optimized version) | Starts faster and uses less GPU. First run this once: `cp ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo/yolo11n.engine ~/Robotics_Assignment_4/` |
+| `MODEL_PATH` | `'yolo11s.pt'` | Slower, usually more accurate |
+| `PUBLISH_PERIOD` | `0.2` (5 times a second instead of 20) | The subscriber prints less often |
+
+**You should see:** the same kind of output as Step 9, only faster, slower or different, depending on your change. For `.engine` files you will also see lines starting with `[TRT]` and a note that it assumes `task=detect`. That is fine.
+
+**What you learn:** The same program can be made faster or more accurate by changing one number. Faster models save power and keep the robot's reactions quick.
+
+---
+
+## Step 11: 🎥 Record Clip 2: publisher and subscriber (Part B)
+
+**Do:** Start filming (phone or camera aimed at the screen and the robot). Run the publisher and the subscriber in two terminals side by side. Point the robot's camera at several objects (a person, a bottle, a laptop). Say out loud what each program does.
+
+**You should see (and show in the video):** the subscriber printing the objects that the publisher's camera sees.
+
+**What you learn:** You are showing that two separate programs can share information over ROS 2. The robot's driving program works the same way.
+
+---
+
+## Step 12: Read how the robot finds the bottle
+
+**Read:** This is how `bottle_pick_place.py` works. You do not need to understand the code.
+
+1. It listens to the YOLO channel (Step 9) and looks for a `bottle`.
+2. If the bottle's box is left or right of the middle of the picture, it turns the wheels to bring it back to the middle. This is called **visual servoing**.
+3. When the bottle is centered, it drives forward until the box is tall enough (the bottle is close).
+4. Then it moves the arm to home pose, opens the gripper, reaches forward, closes the gripper, and pulls back to home.
+5. To place the bottle, it drives back to where it started (using the wheel sensors) and sets the bottle down.
+
+**What you learn:** A robot can do a real task using just two things: *where* the object is (the box center) and *how close* it is (the box height). You will tune a few numbers that control each of those.
+
+---
+
+## Step 13: Start the robot
+
+**Do:** **[Jetson]** Close the old programs. Make sure the robot has free space around it. Then start the robot's drivers in a terminal.
+
 ```bash
 ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
+
+**You should see:** a lot of lines, ending with no red `ERROR` lines. (This is the same step as in Assignment 3.)
+
+```text
+[INFO] [launch]: All log files can be found below /home/nvidia/.ros/log/...
+[ros2_control_node-1] [INFO] ...: Successfully loaded controller arm_controller
+[ros2_control_node-1] [INFO] ...: Successfully loaded controller gripper_controller
+```
+
+Then, in a **second Jetson terminal**, start the YOLO publisher again:
+
 ```bash
 cd ~/Robotics_Assignment_4
 python3 yolo_publisher_sample_code.py
 ```
-2. **[Remote PC or Jetson]** Open `bottle_pick_place.py`. On the Remote PC, copy it to `~/turtlebot_docker/my_code` and run it from the Docker shell.
-3. **Copy these values from your Assignment 3 code** (your `sample_code.py` that you submitted) into the settings block of `bottle_pick_place.py`. These are the one change you must make; the defaults in the file are only placeholders.
+
+**What you learn:** The robot's drivers let programs move the wheels and the arm. The publisher keeps sending what the camera sees. Both must be running for the next steps.
+
+---
+
+## Step 14: Copy your Assignment 3 values
+
+**Do:** **[Remote PC]** Open your own Assignment 3 code (`~/turtlebot_docker/my_code/sample_code.py`, the one you submitted). Find these values. This command prints them for you (run it in a normal terminal on the laptop):
+
+```bash
+grep -nE "LIN_VEL_STEP_SIZE|ANG_VEL_STEP_SIZE|GRIPPER_KEY_BINDINGS|'g'|'h'|'9'|'0'" ~/turtlebot_docker/my_code/sample_code.py
+```
+
+```text
+32:LIN_VEL_STEP_SIZE = 0.01
+41:GRIPPER_KEY_BINDINGS = {
+42:    'g': 0.01,  # Open
+43:    'h': -0.01  # Close
+47:    '9': [0.0, 0.0, 0.0, 0.0],  # Home pose
+52:    '0': [0.0, 0.9, 0.0, 0.5],  # Extend arm forward
+```
+
+(Your numbers will be different. Use **yours**.)
+
+Now open `~/turtlebot_docker/my_code/Robotics_Assignment_4/bottle_pick_place.py` and copy your values into the settings block:
 
 | In `bottle_pick_place.py` | Copy from your Assignment 3 code |
 | --- | --- |
 | `HOME_POSE` | The `'9'` (Home) entry in `POSES` |
 | `EXTEND_POSE` | The `'0'` (Extend Forward) entry in `POSES` |
-| `GRIPPER_OPEN`, `GRIPPER_CLOSE` | The `'g'` and `'h'` values in `GRIPPER_KEY_BINDINGS` |
-| `FORWARD_VEL`, `SEARCH_ANGULAR_VEL` (optional) | Use `LIN_VEL_STEP_SIZE` and `ANG_VEL_STEP_SIZE` as a hint for slow speeds your robot handled well |
-4. Place the bottle on the ground in the camera's view, slightly off-center, and run the script. Press `Ctrl+C` at any time to stop the robot.
+| `GRIPPER_OPEN` | The `'g'` value in `GRIPPER_KEY_BINDINGS` |
+| `GRIPPER_CLOSE` | The `'h'` value in `GRIPPER_KEY_BINDINGS` |
+
+Optional: if your robot moved well in Assignment 3, `LIN_VEL_STEP_SIZE` is a good hint for a safe, slow `FORWARD_VEL`.
+
+**You should see:** the settings block looks like this, with **your** numbers:
+
+```python
+HOME_POSE = [0.0, 0.0, 0.0, 0.0]
+EXTEND_POSE = [0.0, 0.9, 0.0, 0.5]
+GRIPPER_OPEN = 0.01
+GRIPPER_CLOSE = -0.01
+```
+
+**What you learn:** You already found the arm poses and gripper values for this exact robot in Assignment 3. Reusing them means you don't have to find them again. The numbers in the file are only placeholders until you replace them.
+
+---
+
+## Step 15: Find the "close enough" box height
+
+**Do:** **[Jetson]** Open a terminal and start the subscriber (Step 9). Hold the bottle at the distance where the robot's gripper could grab it. Read the second number of `Size`.
+
+```bash
+cd ~/Robotics_Assignment_4
+python3 yolo_subscriber_sample_code.py
+```
+
+**You should see:**
+
+```text
+[INFO] [...] [yolo_json_subscriber]:   [0] bottle (0.89) | Center: (640.0, 360.0), Size: 210.5x430.2
+```
+
+Here the height is about `430`. In `bottle_pick_place.py`, set `STOP_BBOX_HEIGHT` a little below that number (for example `400`). Then close the subscriber with `Ctrl+C`.
+
+```python
+STOP_BBOX_HEIGHT = 400
+```
+
+**What you learn:** A taller box means a closer bottle. The robot stops when the box reaches this height. This is how it knows how far to drive.
+
+---
+
+## Step 16: Run Stage 1: only turn toward the bottle
+
+**Do:** **[Remote PC]** Make sure the laptop and the Jetson are on the same `small_blue_wifi` network, as in Assignment 3. Open a Docker shell (`docker exec -it remote_pc_humble bash`). Make sure `STAGE = "servo"` is set in the file (it is the default). Run the script. Place the bottle slowly in front of the robot and move it left and right. Press `Ctrl+C` any time to stop the robot.
+
+```bash
+cd ~/my_code/Robotics_Assignment_4
+python3 bottle_pick_place.py
+```
+
+**You should see:** the robot turns in place to face the bottle. It does not drive forward.
+
+```text
+[INFO] [1780000000.123456789] [bottle_pick_place]: STAGE = servo, looking for ['bottle']
+[INFO] [1780000000.223456789] [bottle_pick_place]: Tracking the bottle. Press Ctrl+C to stop.
+```
+
+**What you learn:** The robot compares the bottle's center to the middle of the picture, and turns the wheels to shrink that gap. If it wobbles or lags, see the tuning table in Step 19.
+
+---
+
+## Step 17: 🎥 Record Clip 3: visual servoing (Part C a)
+
+**Do:** Start filming. Make sure the robot, the bottle and the terminal screen are all in view. Run `bottle_pick_place.py` with `STAGE = "servo"`. Move the bottle slowly in front of the robot. Say out loud what you see.
+
+**You should see (and show in the video):** the robot "locks onto" the bottle and keeps it in the center of the camera's view by turning left and right.
+
+**What you learn:** This is visual servoing: using the camera to steer. Keep the clip short.
+
+---
+
+## Step 18: Run Stage 2: pick up the bottle
+
+**Do:** **[Remote PC]** Open `bottle_pick_place.py` and change the stage. Put the bottle on the ground in front of the robot, slightly off-center, and run it again. Press `Ctrl+C` to stop the robot.
+
+```python
+STAGE = "pick"
+```
+
 ```bash
 python3 bottle_pick_place.py
 ```
 
-**Run the three stages.** Change `STAGE` in the settings block between runs. These match demo parts C a), b) and c).
+**You should see:** the robot turns to face the bottle, drives up to it, reaches forward, closes the gripper, and lifts the bottle.
 
-| `STAGE` | What the robot does |
-| --- | --- |
-| `"servo"` | Turns the wheels so the bottle stays in the center of the image. It does not drive forward. Move the bottle slowly in front of the robot. |
-| `"pick"` | Servo, drive up to the bottle, grab it and lift it off the ground. |
-| `"full"` | Everything in `"pick"`, then return to the start point and place the bottle on the ground. |
+```text
+[INFO] [1780000000.123456789] [bottle_pick_place]: STAGE = pick, looking for ['bottle']
+[INFO] [1780000000.223456789] [bottle_pick_place]: Waiting for arm and gripper controllers and odometry...
+[INFO] [1780000001.323456789] [bottle_pick_place]: Start point recorded at x=0.00 y=0.00
+[INFO] [1780000001.423456789] [bottle_pick_place]: Arm to home pose, gripper open.
+[INFO] [1780000009.423456789] [bottle_pick_place]: Tracking the bottle. Press Ctrl+C to stop.
+[INFO] [1780000024.523456789] [bottle_pick_place]: Picking up the bottle.
+[INFO] [1780000036.623456789] [bottle_pick_place]: Pick complete.
+```
 
-**Tune it.** If the robot does not behave well, change one value at a time in the settings block and run again.
+**What you learn:** The same program now also drives forward and uses the arm and gripper you set up in Assignment 3. If the robot does not do well, use the tuning table in Step 19.
+
+---
+
+## Step 19: Tune it (only if needed)
+
+**Do:** If the robot does not behave well, change **one** value at a time in the settings block of `bottle_pick_place.py` and run it again.
 
 | Symptom | Setting to change |
 | --- | --- |
 | Robot wobbles left and right around the bottle | Lower `TURN_GAIN`, or raise `CENTER_TOLERANCE_PX` |
 | Robot reacts slowly or lags behind the bottle | Raise `TURN_GAIN` |
-| Robot stops too far from or too close to the bottle | Change `STOP_BBOX_HEIGHT`. Read the box height `h` from the subscriber of Part 2 when the bottle is at the right grabbing distance |
+| Robot stops too far from or too close to the bottle | Change `STOP_BBOX_HEIGHT` (see Step 15) |
 | Robot drives too fast to track | Lower `FORWARD_VEL` |
 | Gripper misses or crushes the bottle | Adjust `EXTEND_POSE`, `GRIPPER_CLOSE` (start from your Assignment 3 values) |
-| Bottle is detected as another object (e.g. a teddy bear as a donut) | Add the extra labels to `TARGET_CLASSES` |
-| Detections flicker | Raise `MIN_CONFIDENCE` |
-| Robot does not get back to its start point | Change `RETURN_VEL`, `HOME_TOLERANCE` |
+| Bottle is named as another object | Add the extra names to `TARGET_CLASSES`, for example `["bottle", "vase"]` |
+| Detections flicker on and off | Raise `MIN_CONFIDENCE` |
+| Robot does not get back to its start point (Step 21) | Change `RETURN_VEL`, `HOME_TOLERANCE` |
+
+**You should see:** the behaviour improves. Write down which numbers you changed and why. You will mention them in the next clip.
+
+**What you learn:** Real robots need tuning. Changing one number at a time, and watching what changes, is how engineers find good values.
 
 ---
 
-### Demo Requirements (3.5-4 Minute Demonstration) - 100 points
+## Step 20: 🎥 Record Clip 4: pick up the bottle (Part C b)
 
-Please refer to the video submission requirements in the introduction.
+**Do:** Start filming (robot, bottle and screen in view). Set `STAGE = "pick"`. Put the bottle on the ground in the camera's view, slightly off-center. Run the script. **Say out loud which settings you tuned and why.**
 
-Your submission must include **links to the video file**.
+**You should see (and show in the video):** the robot faces the bottle, drives to it, reaches out, grabs it and lifts it off the ground.
 
-**Part A: YOLOv11 Demonstration on Jetson GPU -10 points**
-This part demonstrates your ability to run various YOLOv11 models on the Jetson's GPU using a live camera feed.
-
-* **Object Detection (YOLOv11):** Run the standard YOLOv11 detection model. Point the camera at several different objects (e.g., a person, a bottle, a laptop) and show the model drawing accurate bounding boxes and class labels in real-time with a given demo code.
-
-* **Prove CUDA Usage:** While the YOLOv11 models are running, open a new terminal and run `tegrastats`. You must show the output of `tegrastats`, which should indicate that the CUDA cores are active and under load, confirming that inference is running on the CUDA cores.
-
-**Part B: YOLOv11 Publisher and Subscriber Demonstration-20 points**
-
-* **Publisher and Subscriber (YOLOv11):** Run the completed sample code for YOLOv11 publisher and subscriber. Point the camera at several different objects (e.g., a person, a bottle, a laptop) and show that two different programs can exchange necessary information over ROS2.
-
-**Part C: ROS2 Control Demonstration With Physical Turtlebot - 70 points**
-
-This part showcases your ability to integrate the given ROS2 code for a robotic task.
-
-* a): Demonstrating Visual Servoing to a Bottle (Task 1) -20 points
-
-For part C's a), run `bottle_pick_place.py` with `STAGE = "servo"`. It turns the wheels of the Turtlebot 3 so that the front of the robot faces the target object, a bottle.
-
-Demonstrate your code by moving the bottle slowly in front of the robot. The robot should "lock onto" the bottle and attempt to keep the subject at the center of the camera's field of view using the robot's wheels to turn left and right.
-
-* b): Pick the bottle with Turtlebot (Task 1) -30 points
-
-For part C's b), run `bottle_pick_place.py` with `STAGE = "pick"`. The Turtlebot 3 faces the bottle, drives towards the bottle, extends the arm, grabs onto the bottle, and lifts it off the ground. In your narration, briefly explain the settings you tuned and why. To test, place the bottle on the ground in the field of view of the Turtlebot's camera, but slightly off-center. 
-
-
-* c): Pick and Place with Turtlebot (Task 2) -20 points
-
-For part C's c), run `bottle_pick_place.py` with `STAGE = "full"`. The Turtlebot 3 returns to the base you define after picking up the bottle, and release the bottle on the ground at the home base near the robot's starting location. To test, refer to part C's b). 
+**What you learn:** You can explain your choices, which is as important as the robot working.
 
 ---
 
-### Appendix
+## Step 21: Run Stage 3: pick up and place the bottle
 
-#### [Optional] Running YOLO v11 on Your Desktop Machine
-
-You can run YOLO v11 with either CPU only or CUDA on your own desktop machine with any architecture, with the following setup and modifications. This capability might help you with offloading some of the development for this assignment to your own machine. However, while this instruction was tested on our machines, we would not offer official support for you running YOLO on your own machine. We would also not provide ways to hook up camera feed from Gazebo’s simulated turtlebot onto YOLO v11.
-
-Recommended reading: [https://docs.ultralytics.com/](https://docs.ultralytics.com/)
-
-**[Your PC]** It is not recommended to install YOLO in a Python virtual environment, such as Conda, if you want it to work well with ROS2 or other binary programs installed through apt-get. This is the primary reason why we did not install a Python virtual environment on Jetson.
-
-You can deactivate your Python virtual environment temporarily and install Ultralytics packages if you need your virtual environment.
-
-**[Your PC]** Install GPU drivers such as CUDA and ROCm, Pytorch, and TorchVision. When installing PyTorch and TorchVision, please follow the exact instructions on the official website. [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/) .
-
-**[Your PC]** On your terminal, install the Ultralytics package and OpenCV
-
-```bash
-pip install ultralytics opencv-python
-
-```
-
-**[Your PC]** Here is an example YOLO v11 Python code adapted to a desktop environment. We have changed cap interface to webcam for you. Replace `PT_MODEL` with “yolov11-seg.pt” or “yolov11-pose.pt” to convert it to seg or pose models. Refer to above for full list of model names and associated .pt names.
-
-**Desktop YOLO v11 demo code on CPU or CUDA**
+**Do:** **[Remote PC]** Set the stage to `"full"` and run it. The robot will drive back to where it started and put the bottle down. Keep the way clear and be ready to press `Ctrl+C`.
 
 ```python
-import cv2
-import time
-from ultralytics import YOLO
-import numpy as np
-
-def desktop_demo():
-
-    PT_MODEL = "yolov11n.pt"  # Change this line for different models
-    model = YOLO(PT_MODEL)
-   
-    # Capture through webcam
-    cap = cv2.VideoCapture(0) # Replace with the name of a photo or video if needed
-    if not cap.isOpened():
-        print("Error: unable to open camera")
-        return
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        start = time.time()
-        results = model(frame)  
-        end = time.time()
-        annotated_frame = results[0].plot()
-
-        # Calculate and display FPS
-        fps = 1 / (end - start)
-        cv2.putText(annotated_frame,
-                     f"FPS: {fps:.1f}",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1, (0, 255, 0), 2)
-
-        cv2.imshow("YOLOv11 Desktop Demo", annotated_frame)
-        
-        if cv2.waitKey(1) == 27: #ESC
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    desktop_demo()
-
+STAGE = "full"
 ```
-
-#### [Optional Reading] Platform Specific Optimizations on Jetson for Real-time Performance
-
-You might have noticed that the provided code is different from the normal code that you are used to running in other computer science classes. Jetson is an edge platform that requires optimization for real-time performance and requires some specialized ways to perform everyday functions.
-
-**Camera connection for Jetson**
-The first major difference is how we connected the camera to the Jetson. Instead of using a USB connection to a normal webcam, we use the MIPI CSI (Camera Serial Interface) port on the Jetson to connect to a camera at a lower level. The CSI port is a direct, high-bandwidth connection to the Jetson's dedicated Image Signal Processor (ISP).
-
-By using the CSI port, the raw image data bypasses the slow, general-purpose USB controller and goes straight into the ISP. The ISP handles critical pre-processing tasks like de-Bayering (converting raw sensor data to a color image), color correction, and noise reduction using dedicated hardware. This frees the CPU from doing any of this initial heavy lifting and, most importantly, achieves lower photon-to-response latency.
-In practice, this changes how the camera is accessed through code. The gst string in your code is actually a command that builds a hardware-accelerated video processing pipeline using GStreamer. More specifically, we use nvarguscamerasrc, which is a GStreamer plugin specifically designed for cameras connected to the MIPI CSI (Camera Serial Interface) port on the Jetson.
-
-Let us break down the pipeline illustrated in gst string in more detail. As mentioned, nvarguscamerasrc captures video from the CSI/ISP hardware. video/x-raw(memory:NVMM) is arguably the most important performance trick in the pipeline. NVMM (NVIDIA Managed Memory) tells the system to keep the video frame entirely within the GPU/SoC's memory space. The frame is never copied to the CPU's main RAM. This concept, often called "zero-copy," is a massive performance win because moving large video frames between CPU and GPU memory is a slow, performance-killing bottleneck. nvvidconv is a hardware-accelerated video converter. Tasks like resizing the video (e.g., from 1080p to 480p) or changing the color format (e.g., from the camera's native format to the BGR format needed by OpenCV) are performed by the Jetson's dedicated video engine, not the CPU.
-
-Therefore, by making Jetson-specific modifications to the Python code, your Python code can have all the capturing, pre-processing, and format conversion already been done efficiently in hardware. This means that by the frame is available from appsink, the frame would already be waiting in a GPU-accessible memory location for your use.
-
-**Camera Sensor Modes for Raspberry Pi v2 camera**
-The Raspberry Pi Camera Module v2 (IMX219) has several sensor modes available on the NVIDIA Jetson Xavier NX, but they are often grouped into a few commonly used configurations accessible through the driver. The specific modes you can use depend on the camera driver (like nvarguscamerasrc for GStreamer) and the software you're using. Using different sensor modes allows you to access outputs of the camera sensor with different frame rate, field of view and bit depth. 
-
-On Jetson, the following modes are accessible for user’s applications.
-
-* **Mode 0 (3264x2464 @ 21 FPS):** This is the full-resolution mode, capturing the entire 8-megapixel sensor area. It's best for high-quality still images but has a lower frame rate.
-* **Mode 2 (1920x1080 @ 30 FPS):** This is a standard Full HD video mode. It uses the full sensor width and then crops or scales it down, providing a wide field of view. This is a very common mode for video applications.
-* **Mode 4 (1280x720 @ 120 FPS):** This is the high frame rate mode, ideal for slow-motion capture. It achieves this speed by using 2x2 binning on the sensor, which groups pixels together. This results in a "partial" or cropped field of view compared to the other modes.
-
-**OpenCV for Jetson**
-
-While the OpenCV you are using is similar to the OpenCV you are using for other computer science classes, we needed to compile from source to exploit the hardware on the Jetson. This is because a binary install of OpenCV from pip is CPU-only and is not configured well.
-In particular, you need to enable particular sets of plugins during source compilation. We leave some of them here. A good optional exercise for the reader is to find out what each flag does and how it fits within our robot assignment. Note: Jetson Xavier series has 7.2 for CUDA_ARCH_BIN.
 
 ```bash
-cmake \
-…
--D WITH_CUDA=ON \
--D CUDA_ARCH_BIN='7.2' \ 
--D WITH_CUDNN=ON \
--D OPENCV_DNN_CUDA=ON \
--D ENABLE_FAST_MATH=ON \
--D CUDA_FAST_MATH=1 \
--D WITH_GSTREAMER=ON \
--D WITH_LIBV4L=ON \
--D ENABLE_NEON=ON \
-…
-
+python3 bottle_pick_place.py
 ```
 
-**Jetson AI Inference and TensorRT Exploitation**
+**You should see:** everything in Step 18, then the robot drives back and places the bottle.
 
-Let's now look at part of the code dealing with .pt file and .engine file.
+```text
+[INFO] [1780000036.623456789] [bottle_pick_place]: Returning to the start point.
+[INFO] [1780000052.723456789] [bottle_pick_place]: Placing the bottle.
+[INFO] [1780000064.823456789] [bottle_pick_place]: Pick and place complete.
+```
 
-A .pt file is a standard model from the PyTorch framework. It's flexible and contains the model's architecture and weights. When you run it, the PyTorch framework interprets this file to perform the calculations. It's portable but not optimized for any specific hardware.
-An .engine file is the result of taking the .pt blueprint and compiling it with NVIDIA TensorRT SDK. A wrapper from Ultralytics takes care of the specifics in utilizing TensorRT. TensorRT is an optimizer that aggressively modifies the model to run as fast as possible on a specific NVIDIA GPU—in this case, your Jetson's integrated GPU.
+If the return takes too long, you will see this instead and the robot places the bottle where it is:
 
-This "export" step performs several key optimizations using the TensorRT SDK:
+```text
+[WARN] [...] [bottle_pick_place]: Return timed out, placing the bottle here.
+```
 
-* **Layer Fusion:** It combines multiple simple AI layers (e.g., a convolution, a bias, and an activation) into a single, highly efficient custom operation. By fusing multiple computational operations into a single operation, we can achieve higher inference speed. We also set up so that during the inference process, we exploit Nvidia’s Tensor Cores, a dedicated part of the silicon that supports operations such as Fused Multiply Add, a common operation during AI inference.
-* **Tensor Cores:** Suggested Reading: [https://developer.nvidia.com/blog/programming-tensor-cores-cuda-9/](https://developer.nvidia.com/blog/programming-tensor-cores-cuda-9/)
-* **Precision Calibration:** Also known as quantization, it can convert calculations from slow 32-bit numbers to much faster 16-bit (FP16) or 8-bit (INT8) numbers, often with little to no loss in accuracy.
-* **Kernel Auto-Tuning:** It selects the fastest possible algorithms for your specific Jetson GPU.
+**What you learn:** The robot remembers its start point from its wheel sensors (called odometry) and drives back to it. The wheel sensors drift a little, so it may not return exactly.
 
-In order to do this, you need some setup in addition to the Jetpack software that contains the TensorRT SDK. That part was done by the IA.
+---
 
-**Pytorch and TorchVision for Jetson**
+## Step 22: 🎥 Record Clip 5: pick and place (Part C c)
 
-The pre-compiled versions of PyTorch available on the standard Python Package Index (PyPI) are built for desktop computers, which almost always use an x86_64 CPU architecture (from Intel or AMD). The NVIDIA Jetson, however, uses an ARM64 CPU architecture, similar to what's in modern smartphones or Apple Silicon Macs. Therefore, NVIDIA provides PyTorch wheels (.whl files) that have been specifically compiled for the Jetson's ARM64 architecture so they can run correctly.
+**Do:** Start filming (robot, bottle and screen in view). Set `STAGE = "full"`. Test it the same way as Clip 4. Show that the robot returns near its starting spot and puts the bottle on the ground.
 
-You also need to ensure compatibility with Jetpack. The Jetson's operating system, a customized Ubuntu operating system called JetPack, includes specific versions of CUDA, cuDNN, and TensorRT that are tailored for its mobile, power-efficient GPU. NVIDIA’s custom PyTorch builds are specifically compiled and linked against these exact libraries. This ensures a stable and high-performance bridge between the PyTorch framework and the GPU hardware. Also, during compilation, NVIDIA enables specific flags and optimizations that take advantage of the unique features of the Jetson's GPU, which are different from a desktop GPU like an RTX 4090.
+**You should see (and show in the video):** pick, return, place, with the robot ending near where it started.
 
-Therefore, when installing PyTorch and TorchVision for Jeston, you need to match your Python version and your specific Jetpack version. This effectively means you would be installing an older version of Pytorch and TorchVision on Jetson, and problems with that, such as an older version of Numpy. You need to make sure which version works with which version when working with Jetson. That part was done for you by the IA.
+**What you learn:** You have now shown the full job: see, aim, approach, grab, carry, and place.
+
+---
+
+## Step 23: Submit
+
+You must submit **5 video clips**. Tick every box before you submit.
+
+- [ ] **Clip 1 (Part A): YOLO on the Jetson.** Shows every team member's face and name at the start. Shows boxes and labels on several objects, and `tegrastats` with `GR3D_FREQ` going up.
+- [ ] **Clip 2 (Part B): Publisher and subscriber.** Shows both programs running, and the subscriber printing the objects the camera sees.
+- [ ] **Clip 3 (Part C a): Visual servoing.** Shows `STAGE = "servo"`. The robot keeps the bottle in the center by turning left and right as you move the bottle slowly.
+- [ ] **Clip 4 (Part C b): Pick up the bottle.** Shows `STAGE = "pick"`. The robot faces the bottle, drives to it, grabs it and lifts it. The narrator says which settings were tuned and why.
+- [ ] **Clip 5 (Part C c): Pick and place.** Shows `STAGE = "full"`. The robot returns near its start spot and puts the bottle on the ground.
+
+For every clip: film the screen **and** the robot with a phone or camera while one team member narrates. You do not need to edit, and a few minutes in total is enough.
+
+**How to hand in**
+
+1. Upload each clip to YouTube and set it to **Unlisted**. Do not upload the raw video files to Canvas.
+2. **Every team member** pastes all 5 links into Canvas under **Assignment 4**, even if the team recorded the clips together.
+
+Source code is **not** required for this assignment.
