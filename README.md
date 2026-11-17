@@ -63,7 +63,12 @@ This assignment uses two separate computers, and each step in this guide tells y
 - The **Jetson** is the small computer that is mounted on the robot. It is connected to the camera and runs YOLO on its graphics chip (the GPU). You enter commands in its normal terminal, without Docker.
 - The **Remote PC** is the laptop that has been provided to you. It sends movement commands to the robot over the network. You enter commands either in a normal terminal or inside the Docker container from Assignment 1, and each step tells you which one to use.
 
-The two computers send messages to each other over the network, so both of them must be connected to the same wireless network, `small_blue_wifi`, as in Assignment 3.
+This assignment uses two different wireless networks, so please pay attention to which one each step requires:
+
+- **`small_blue_wifi`** is the robot's private network. The Jetson and the Remote PC send messages to each other over it, so both computers must be connected to `small_blue_wifi` whenever the robot is running (Steps 14 to 23), as in Assignment 3. This network has **no internet access**.
+- **The regular WiFi (internet)** is needed whenever a step downloads something from the internet: cloning the repository (Step 5) and downloading the YOLO model files (Steps 6, 7, and 9). Each of these steps starts with a reminder.
+
+Please switch a computer from one network to the other whenever a step tells you to.
 
 ---
 
@@ -103,6 +108,8 @@ In this output, `CPU` shows how busy each processor core is, and `GR3D_FREQ` sho
 
 **What you will learn:** You will learn which files are needed on each computer. The Jetson runs the camera and YOLO, and the Remote PC runs the robot's driving program, so both computers need the repository.
 
+**Network required: the regular WiFi with internet access.** Downloading from GitHub does not work on `small_blue_wifi`, so please connect **both** the Jetson and the Remote PC to the regular WiFi (the internet) before you start this step. You will reconnect them to `small_blue_wifi` later, in the steps that use the robot.
+
 Please perform the first part of this step on the **Jetson**. Please open a **second** terminal. The following two lines go to your home folder and then download (clone) the assignment repository from GitHub. Please copy and paste them and run them:
 
 ```bash
@@ -139,6 +146,8 @@ Receiving objects: 100% (40/40), 18.2 MiB | 6.1 MiB/s, done.
 
 **What you will learn:** You will see YOLO11 detect objects in real time on the robot's camera. You should repeat this step before each later use of the camera, because it confirms that the camera and the GPU work. If this demonstration fails, the problem is in the camera or its connection, and not in the later steps.
 
+**Network required: the regular WiFi with internet access** the first time that you run this step, because the program downloads the YOLO model file and converts it, which takes several minutes. After that first run, no internet is needed.
+
 Please perform this step on the **Jetson**. The following two lines go to the demonstration folder and then start the detection program. Please copy and paste them and run them:
 
 ```bash
@@ -161,6 +170,8 @@ You are encouraged to open `yolov11_demo.py` and read it. You are not required t
 ## Step 7: Try a Different YOLO Model Size
 
 **What you will learn:** You will learn that larger YOLO models are usually more accurate but slower. Speed matters for a robot that must react quickly. This step is optional, and you may skip it if you are short on time.
+
+**Network required: the regular WiFi with internet access**, because a model size that you have not used before must be downloaded.
 
 Please perform this step on the **Jetson**. YOLO11 comes in five sizes. Please choose one from the following list:
 
@@ -244,7 +255,7 @@ cd ~/Robotics_Assignment_4
 python3 yolo_publisher_sample_code.py
 ```
 
-The first time that you run it, the program must download the model weights, so the Jetson needs an internet connection and the step takes longer. Afterward, you can reconnect the Jetson to `small_blue_wifi`.
+The first time that you run it with a model that has not been downloaded yet, the program must download the model weights, so **the Jetson must be connected to the regular WiFi (the internet)** and the step takes longer. After the model has been downloaded once, you can reconnect the Jetson to `small_blue_wifi`.
 
 Then you will see something like this. Many lines about the camera will appear, which is normal.
 
@@ -363,6 +374,8 @@ Please read the following description of what `bottle_pick_place.py` does. You d
 ## Step 14: Start the Robot
 
 **What you will learn:** You will learn which programs must be running before the driving program can work. The launch command starts the drivers that let programs move the wheels and the arm, and the publisher keeps sending what the camera sees.
+
+**Network required: `small_blue_wifi`.** Please connect **both** the Jetson and the Remote PC to `small_blue_wifi` now, and keep them on it until the end of the assignment. The two computers can only find each other on this network, and it has no internet access.
 
 Please perform this step on the **Jetson**. Please make sure that there is free space around the robot, and please close any programs from the earlier steps. The following command starts the robot's drivers. It is the same command that you used in Assignment 3. Please copy and paste it and run it in a terminal:
 
