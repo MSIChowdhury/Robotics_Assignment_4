@@ -61,7 +61,7 @@ A Docker container is a self-contained environment that holds a program together
 This assignment uses two separate computers, and each step in this guide tells you which one to use.
 
 - The **Jetson** is the small computer that is mounted on the robot. It is connected to the camera and runs YOLO on its graphics chip (the GPU). You enter commands in its normal terminal, without Docker.
-- The **Remote PC** is your laptop. It sends movement commands to the robot over the network. You enter commands either in a normal terminal or inside the Docker container from Assignment 1, and each step tells you which one to use.
+- The **Remote PC** is the laptop that has been provided to you. It sends movement commands to the robot over the network. You enter commands either in a normal terminal or inside the Docker container from Assignment 1, and each step tells you which one to use.
 
 The two computers send messages to each other over the network, so both of them must be connected to the same wireless network, `small_blue_wifi`, as in Assignment 3.
 
