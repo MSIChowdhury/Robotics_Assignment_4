@@ -1,75 +1,116 @@
 # CS7389K Advanced Robotics and Autonomous Systems
 
-## Milestone 4: Teaching Your Robot to See and Pick Up a Bottle (YOLO)
+## Assignment 4: Visual Servoing and Bottle Pick-and-Place with YOLO
 
 **Author:** MD Sameer Iqbal Chowdhury
 
-## What is this assignment?
+## Introduction
 
-You will give your TurtleBot **eyes**. A camera and a program called **YOLO** find objects in the picture. Then the robot turns toward a bottle, drives up to it, picks it up, and carries it back. You do not need to write any code. You will run programs, change a few numbers, and watch what happens.
+In this assignment, you will give your TurtleBot the ability to see. A camera on the robot sends pictures to a program called YOLO, which finds objects in each picture and draws a labeled box around them. You will then run a ready-made program that uses those boxes to turn the robot toward a bottle, drive up to it, pick it up, and carry it back to where it started.
 
-| Tool | What it does |
-| --- | --- |
-| **YOLO** | Looks at a camera picture and draws a box around each object it knows, with a name tag |
-| **Publisher / Subscriber** | One program shouts what YOLO sees. Another program listens |
-| **`bottle_pick_place.py`** | The ready-made program that moves the robot toward the bottle |
+You are not required to write any code. You will run programs, change a small number of settings, and observe what happens.
 
-**How to use this page:** do the steps in order, one at a time. Each step tells you what to do, what you should see, and what you learn. Compare your screen with the "You should see" box. Small differences (numbers, timestamps, which objects it sees) are normal.
+**How to use this guide.** Please complete the steps in order, one at a time. Each step begins with a short statement of what you will learn. Each command is followed by an example of the output that you should see, so that you can compare it with your own screen. Small differences, such as numbers, timestamps, and the objects that YOLO detects, are normal.
 
-Two places are used. **[Jetson]** is the small computer on the robot (type in its normal terminal, no Docker). **[Remote PC]** is your laptop (type inside the Docker container from Assignment 1).
+**Reading the code.** You are encouraged to open the Python files and read the code to understand how each program works. You are not required to change any code, except for the specific changes that this guide asks you to make.
 
-**What you hand in:** 5 short video clips, uploaded to YouTube (Unlisted), with the 5 links pasted into Canvas. The full checklist is in the last step.
-
-Questions? Send a direct message to the Doctoral Instructor Assistant on Slack. Please do not email the instructor about the milestones.
+**Getting help.** The Doctoral Instructor Assistant can be contacted only by email at vsj23@txstate.edu. Please do not contact the instructor with questions about the assignments.
 
 ---
 
-## Step 1 (Optional): Watch a video about Docker
+## Submission Requirements (Please Read Before You Begin)
 
-**Watch (optional):** <https://www.youtube.com/watch?v=Gjnup-PuquQ>
+You will submit **five video clips**. Every step that requires a recording is marked with "Recording required" at the very beginning of the step, so you will always know when to record.
 
-You already did this in Assignment 1, so skip it if you remember what Docker is.
+**Rules for all clips**
 
-**What you learn:** A Docker container is like a small, separate computer running inside your laptop. You will use it later for the robot's driving program.
+1. Each clip must be **one continuous recording with no editing**. Please do not cut, trim, speed up, or join any parts. If something goes wrong during a clip, please record the whole clip again from the beginning.
+2. Please film the clips with a phone or a camera. The film must show the computer screen and the robot at the same time, while one team member narrates what is happening.
+3. At the beginning of Clip 1, please show the face of every team member and say each member's name.
+4. Please name every clip with the convention `Assignment4_Group<number>_Clip<number>`. For example, the second clip of Group 2 is named `Assignment4_Group2_Clip2`.
+5. Please upload each clip to YouTube and set its visibility to **Unlisted**. Please use the clip name as the video title. Please do not upload the raw video files to Canvas.
+6. **Every team member** must paste all five links into Canvas under **Assignment 4**, even if the team recorded the clips together.
+7. Source code is **not** required for this assignment.
+
+**The five clips**
+
+| Clip | File name (Group 2 as an example) | What the clip must show |
+| --- | --- | --- |
+| 1 | `Assignment4_Group2_Clip1` | The faces and names of all team members, YOLO detecting several objects on the Jetson camera, and the `tegrastats` window showing that the GPU is working. |
+| 2 | `Assignment4_Group2_Clip2` | The YOLO publisher and the YOLO subscriber running at the same time, with the subscriber printing the objects that the camera sees. |
+| 3 | `Assignment4_Group2_Clip3` | The robot keeping a slowly moving bottle in the center of its view by turning left and right. |
+| 4 | `Assignment4_Group2_Clip4` | The robot facing the bottle, driving to it, grabbing it, and lifting it, while the narrator explains which settings were tuned and why. |
+| 5 | `Assignment4_Group2_Clip5` | The robot picking up the bottle, returning near its starting position, and placing the bottle on the ground. |
 
 ---
 
-## Step 2: Read about YOLO
+## Step 1: Watch a Video About Docker
 
-**Read:** <https://docs.ultralytics.com/>  (the first page is enough)
+**What you will learn:** You will learn what a Docker container is. This step is optional, because you already studied Docker in Assignment 1. Please skip it if you remember the idea.
 
-**What you learn:** YOLO ("You Only Look Once") finds and names many objects in a picture in one quick pass, fast enough to run on live video. It was trained on a set of photos called COCO, so it only knows the 80 kinds of things in that set, and it sometimes names things wrongly (for example a teddy bear as a donut).
+Please watch the following video if you would like a short reminder: <https://www.youtube.com/watch?v=Gjnup-PuquQ>
+
+A Docker container is like a small, separate computer that runs inside your laptop. All of the robot software for the laptop is installed inside it.
 
 ---
 
-## Step 3: Watch the Jetson's workload
+## Step 2: Understand the Two Computers You Will Use
 
-**Do:** **[Jetson]** Open a terminal and start this. Leave it running for the whole assignment.
+**What you will learn:** You will learn which computer you are typing on in each step. Knowing this prevents most of the mistakes that students make in this assignment.
+
+This assignment uses two separate computers, and each step in this guide begins by telling you which one to use.
+
+- The **Jetson** is the small computer that is mounted on the robot. It is connected to the camera and runs the YOLO program. You type on it in an ordinary terminal, without Docker.
+- The **Remote PC** is your laptop. It sends driving commands to the robot from a distance. You type on it either in an ordinary terminal or inside the Docker container that you built in Assignment 1, and each step tells you which one to use.
+
+The two computers send messages to each other over the network. Therefore, both of them must be connected to the same wifi network, `small_blue_wifi`, exactly as in Assignment 3.
+
+---
+
+## Step 3: Read About YOLO11
+
+**What you will learn:** You will learn what YOLO11 is and what kinds of objects it can recognize.
+
+Please read the following page about the YOLO11 model: <https://docs.ultralytics.com/models/yolo11>
+
+YOLO stands for "You Only Look Once". It finds and names many objects in a picture in a single quick pass, which is fast enough for live video. YOLO11 was trained on a collection of photographs called COCO, so it only knows the 80 kinds of objects in that collection. It sometimes names an object incorrectly, for example by calling a teddy bear a donut.
+
+---
+
+## Step 4: Monitor the Jetson's Workload
+
+**What you will learn:** You will learn how to check whether the Jetson's graphics chip (the GPU) is working. You will use this later as proof that YOLO runs on the GPU.
+
+Please perform this step on the **Jetson**. Please open a terminal and keep it open for the whole assignment.
+
+The following command shows the load on the Jetson's processor and GPU once per second. It is needed because it lets you see how hard the Jetson is working while YOLO runs. Please copy and paste the following command and run it:
 
 ```bash
 tegrastats
 ```
 
-**You should see:** one line of numbers every second.
+Then you will see something like this, with one new line every second:
 
 ```text
 RAM 2874/7773MB (lfb 4x4MB) SWAP 0/3886MB CPU [12%@1190,8%@1190,5%@1190,6%@1190,off,off] GR3D_FREQ 0% ...
 ```
 
-**What you learn:** `CPU` shows how busy the processor is. `GR3D_FREQ` is how busy the graphics chip (GPU) is. When YOLO runs, `GR3D_FREQ` should jump up. That is your proof that the GPU is doing the work.
+In this output, `CPU` shows how busy the processor is, and `GR3D_FREQ` shows how busy the GPU is. When YOLO is running, the `GR3D_FREQ` value should rise.
 
 ---
 
-## Step 4: Download the assignment files
+## Step 5: Download the Assignment Files
 
-**Do:** **[Jetson]** Open a **second** terminal and download the repo.
+**What you will learn:** You will learn where the assignment files are stored on each computer. The Jetson runs the camera and YOLO, and the Remote PC runs the robot's driving program, so both computers need the files.
+
+Please perform the first part of this step on the **Jetson**. Please open a **second** terminal. The following two lines first move to your home folder and then download the assignment repository from GitHub. Please copy and paste them and run them:
 
 ```bash
 cd ~/
 git clone https://github.com/MSIChowdhury/Robotics_Assignment_4.git
 ```
 
-**You should see:**
+Then you will see something like this:
 
 ```text
 Cloning into 'Robotics_Assignment_4'...
@@ -77,67 +118,89 @@ remote: Enumerating objects: 40, done.
 Receiving objects: 100% (40/40), 18.2 MiB | 6.1 MiB/s, done.
 ```
 
-**Do:** **[Remote PC]** On your laptop, open a normal terminal (not in Docker) and download the same repo into the folder that Docker shares.
+Please perform the second part of this step on the **Remote PC**. Please open an ordinary terminal on your laptop (not inside Docker). The following two lines move into the folder that Docker shares with your laptop and download the same repository there. Anything in `~/turtlebot_docker/my_code` on the laptop appears as `~/my_code` inside Docker. Please copy and paste them and run them:
 
 ```bash
 cd ~/turtlebot_docker/my_code
 git clone https://github.com/MSIChowdhury/Robotics_Assignment_4.git
 ```
 
-**What you learn:** The Jetson runs the camera and YOLO. The laptop will run the driving program, so both need the files. Whatever is in `~/turtlebot_docker/my_code` on the laptop appears as `~/my_code` inside Docker.
+Then you will see something like this:
+
+```text
+Cloning into 'Robotics_Assignment_4'...
+remote: Enumerating objects: 40, done.
+Receiving objects: 100% (40/40), 18.2 MiB | 6.1 MiB/s, done.
+```
 
 ---
 
-## Step 5: See YOLO work on the camera
+## Step 6: Run the YOLO Demonstration
 
-**Do:** **[Jetson]** Go to the demo folder and run the demo. Point the camera at a few objects (a person, a bottle, a laptop). Press `Esc` on the video window to quit.
+**What you will learn:** You will learn how YOLO detects objects on the robot's own camera. You should also repeat this step every time before you use the camera in later steps, because it confirms that the camera and the GPU are working. If this demonstration fails, the problem is the camera hardware and not your later steps.
+
+Please perform this step on the **Jetson**. The following two lines move into the folder that contains the demonstration and then start it. Please copy and paste them and run them:
 
 ```bash
 cd ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo
 python3 yolov11_demo.py
 ```
 
-**You should see:** a video window with boxes and labels around the objects, like `bottle 0.87` or `person 0.92`. The number is how sure YOLO is (1.00 means very sure). In the `tegrastats` window, `GR3D_FREQ` rises.
+Please point the robot's camera at a few objects, such as a person, a bottle, and a laptop. When you are finished, please press the `Esc` key while the video window is selected to close it.
+
+Then you will see a video window with a box and a label around each object, for example `bottle 0.87` or `person 0.92`. The number is how confident YOLO is, where 1.00 means completely confident. In the `tegrastats` window from Step 4, you will see the GPU value rise, for example:
 
 ```text
 GR3D_FREQ 62% ...
 ```
 
-**What you learn:** YOLO is working on the robot's own camera and GPU. **Run this demo every time before using the camera in later steps.** If it fails, the camera or cable is the problem, not your later steps.
+You are encouraged to open `yolov11_demo.py` and read it. You are not required to change anything in it for this step.
 
 ---
 
-## Step 6: Try a different YOLO model size (optional)
+## Step 7: Try a Different YOLO Model Size
 
-**Do:** **[Jetson]** YOLO comes in five sizes. Pick one from the list, open `yolov11_demo.py` and find these two lines:
+**What you will learn:** You will learn that bigger YOLO models are usually more accurate but slower, and that the robot needs fast reactions. This step is optional, and you may skip it if you are short on time.
+
+Please perform this step on the **Jetson**. YOLO11 comes in five sizes. Please choose one from the following list:
+
+| Size | Name for `PT` | Name for `ENGINE` | Parameters (approximate) |
+| --- | --- | --- | --- |
+| Nano (the default) | `yolo11n.pt` | `yolo11n.engine` | 2.6 million |
+| Small | `yolo11s.pt` | `yolo11s.engine` | 9.4 million |
+| Medium | `yolo11m.pt` | `yolo11m.engine` | 20 million |
+| Large | `yolo11l.pt` | `yolo11l.engine` | 25 million |
+| Extra large | `yolo11x.pt` | `yolo11x.engine` | 57 million |
+
+The Nano model is the fastest and the least accurate. Each larger model is more accurate but slower, and the Extra large model is the slowest on the Jetson.
+
+Please open `yolov11_demo.py` in a text editor, for example by running the following command. The command opens the file in the `nano` editor, which lets you change the file directly in the terminal. After you make your change, please press `Ctrl+O` and then `Enter` to save, and then `Ctrl+X` to leave the editor.
+
+```bash
+nano ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo/yolov11_demo.py
+```
+
+Please find the following two lines:
 
 ```python
 ENGINE = "yolo11n.engine"
 PT     = "yolo11n.pt"
 ```
 
-Change **both** names to the same size, save, and run the demo again.
-
-| Size | `PT` name | `ENGINE` name | Parameters (about) | What to expect |
-| --- | --- | --- | --- | --- |
-| Nano (default) | `yolo11n.pt` | `yolo11n.engine` | 2.6 M | Fastest, least accurate |
-| Small | `yolo11s.pt` | `yolo11s.engine` | 9.4 M | A bit slower, more accurate |
-| Medium | `yolo11m.pt` | `yolo11m.engine` | 20 M | Slower again |
-| Large | `yolo11l.pt` | `yolo11l.engine` | 25 M | Slow on the Jetson |
-| Extra large | `yolo11x.pt` | `yolo11x.engine` | 57 M | Slowest, most accurate |
-
-**Example:** to try the Small model, the lines become:
+Please change **both** names to the same size. For example, to try the Small model, the lines become:
 
 ```python
 ENGINE = "yolo11s.engine"
 PT     = "yolo11s.pt"
 ```
 
+The following command runs the demonstration again with your chosen size. Please copy and paste it and run it:
+
 ```bash
-python3 yolov11_demo.py
+cd ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo && python3 yolov11_demo.py
 ```
 
-**You should see:** the first run of a new size takes a few minutes. The program downloads the `.pt` file and converts it into an `.engine` file (this is the "export"). Later runs start quickly because the `.engine` file now exists.
+Then you will see something like this. The first run of a new size takes a few minutes, because the program downloads the `.pt` file and converts it into an `.engine` file. Later runs start quickly, because the `.engine` file then already exists.
 
 ```text
 [INFO] yolo11s.engine not found, exporting from yolo11s.pt …
@@ -145,32 +208,45 @@ Downloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo1
 ...
 ```
 
-Then the same video window as Step 5 appears. Compare it with the Nano model: how smooth is the video, and how high does `GR3D_FREQ` go in `tegrastats`? Put the names back to `yolo11n` when you are done.
-
-**What you learn:** Bigger models are usually more accurate but slower and use more GPU. The robot needs quick reactions, so a small model is often the better choice.
+After the video window opens, please compare it with the Nano model. How smooth is the video, and how high does the `GR3D_FREQ` value go in `tegrastats`? When you are finished, please change both names back to `yolo11n`.
 
 ---
 
-## Step 7: 🎥 Record Clip 1: YOLO on the Jetson (Part A)
+## Step 8: Record Clip 1 (YOLO on the Jetson)
 
-**Do:** Film this with a phone or camera. The film must show the **computer screen** and the **robot** while one team member narrates. **At the very start, show the face of every team member and say everyone's name.** Then run `python3 yolov11_demo.py` again. Point the robot's camera at several objects (for example a person, a bottle, a laptop). Keep the `tegrastats` window visible next to the video window. Say out loud what you see.
+**Recording required:** Please record this step as one continuous video without editing. Please name the clip `Assignment4_Group<number>_Clip1`, for example `Assignment4_Group2_Clip1`.
 
-**You should see (and show in the video):** boxes and labels on the objects, and `GR3D_FREQ` going up while the model runs.
+**What you will learn:** You will practice explaining what YOLO does, and you will show that the detection runs on the GPU.
 
-**What you learn:** Showing `tegrastats` is your proof that the model ran on the GPU. Keep the clip short, about one minute.
+Please film the computer screen and the robot with a phone or a camera, while one team member narrates. **At the very beginning of the clip, please show the face of every team member and say each member's name.**
+
+The following two lines run the YOLO demonstration again. Please copy and paste them and run them while you are filming:
+
+```bash
+cd ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo
+python3 yolov11_demo.py
+```
+
+Please point the robot's camera at several objects, for example a person, a bottle, and a laptop. Please keep the `tegrastats` window visible next to the video window, and please describe aloud what you see.
+
+Then you will see boxes and labels on the objects, and the `GR3D_FREQ` value in `tegrastats` will rise while the model runs. This is your proof that the GPU is doing the work. The clip should be about one minute long.
 
 ---
 
-## Step 8: Start the YOLO publisher
+## Step 9: Start the YOLO Publisher
 
-**Do:** **[Jetson]** In a terminal, start the publisher. It reads the camera, runs YOLO, and sends out the results. The first run downloads the model weights, so it needs the internet and takes a while. After that you can go back to `small_blue_wifi`.
+**What you will learn:** You will learn what a publisher is. A publisher is a program that continuously sends information to other programs. This one sends a short text message describing every object that YOLO sees, about 20 times per second, on a channel named `/yolo/detections_json`.
+
+Please perform this step on the **Jetson**. The following two lines move into the repository folder and start the publisher. The publisher reads the camera, runs YOLO, and sends out the results. Please copy and paste them and run them:
 
 ```bash
 cd ~/Robotics_Assignment_4
 python3 yolo_publisher_sample_code.py
 ```
 
-**You should see:** (long camera lines will scroll past, which is normal)
+The first time that you run it, the program must download the model weights, so the Jetson needs an internet connection and the step takes longer. Afterward, you can reconnect the Jetson to `small_blue_wifi`.
+
+Then you will see something like this. Many lines about the camera will scroll past, which is normal.
 
 ```text
 [INFO] [1774133694.824883296] [yolo_json_publisher]: Loading YOLOv11 model on CUDA...
@@ -181,20 +257,22 @@ GST_ARGUS: Creating output stream
 CONSUMER: Producer has connected; continuing.
 ```
 
-**What you learn:** A *publisher* is a program that keeps sending out information. This one sends out a short text message about every object YOLO sees, 20 times a second, on a "channel" called `/yolo/detections_json`. Other programs can tune in to that channel.
+You are encouraged to open `yolo_publisher_sample_code.py` and read it to see how a publisher is written. You are not required to change it, except in Step 11.
 
 ---
 
-## Step 9: Start the YOLO subscriber
+## Step 10: Start the YOLO Subscriber
 
-**Do:** **[Jetson]** Open a **new** terminal and start the subscriber. Point the camera at a few objects.
+**What you will learn:** You will learn what a subscriber is and how to read its output. A subscriber is a program that listens to a channel and receives whatever a publisher sends.
+
+Please perform this step on the **Jetson**. Please leave the publisher running and open a **new** terminal. The following two lines move into the repository folder and start the subscriber, which listens to the `/yolo/detections_json` channel and prints what it receives. Please copy and paste them and run them, and then point the camera at a few objects:
 
 ```bash
 cd ~/Robotics_Assignment_4
 python3 yolo_subscriber_sample_code.py
 ```
 
-**You should see:** one block of lines for each camera picture, naming each object, how sure YOLO is, and where the box is.
+Then you will see something like this, with one block of lines for every camera picture:
 
 ```text
 [INFO] [1774133827.058645760] [yolo_json_subscriber]: Listening for YOLO JSON detections...
@@ -202,67 +280,97 @@ python3 yolo_subscriber_sample_code.py
 [INFO] [1774133827.064806720] [yolo_json_subscriber]:   [0] bottle (0.87) | Center: (689.2, 239.0), Size: 180.4x412.7
 ```
 
-**What you learn:** A *subscriber* is a program that listens to a channel. Here is how to read the last line:
-- `bottle (0.87)`: what YOLO sees, and how sure it is.
-- `Center: (689.2, 239.0)`: where the middle of the box is, in pixels. The picture is 1280 wide, so the middle of the picture is `640`.
-- `Size: 180.4x412.7`: the box is 180 pixels wide and 412 tall. **The bigger the box, the closer the object.** The robot will use exactly this to find the bottle and to know when it is close enough.
+The last line can be read as follows:
+
+- `bottle (0.87)` is the name of the object that YOLO sees and how confident YOLO is.
+- `Center: (689.2, 239.0)` is the position of the middle of the box in pixels. The picture is 1280 pixels wide, so the middle of the picture is at 640.
+- `Size: 180.4x412.7` means that the box is about 180 pixels wide and 412 pixels tall. **The taller the box is, the closer the object is.** The robot will use exactly this information to find the bottle and to decide when it is close enough.
+
+You are encouraged to open `yolo_subscriber_sample_code.py` and read it. You are not required to change it.
 
 ---
 
-## Step 10: Change the publisher's settings
+## Step 11: Change the Publisher's Settings
 
-**Do:** **[Jetson]** Stop the publisher (`Ctrl+C`). Open `yolo_publisher_sample_code.py` and find the settings block near the top. Change **one** value, start the publisher again, and watch the subscriber and `tegrastats`.
+**What you will learn:** You will learn that the same program can be made faster or more accurate by changing a single value.
+
+Please perform this step on the **Jetson**. First, please stop the publisher by pressing `Ctrl+C` in its terminal. Then please open the publisher file in a text editor. The following command opens it in `nano`, using the same saving method as in Step 7:
+
+```bash
+nano ~/Robotics_Assignment_4/yolo_publisher_sample_code.py
+```
+
+Please find the settings block near the top of the file:
 
 ```python
 MODEL_PATH = 'yolo11n.pt'
 PUBLISH_PERIOD = 0.05
 ```
 
-| Setting | Try this | What to notice |
-| --- | --- | --- |
-| `MODEL_PATH` | `'yolo11n.engine'` (a faster, optimized version) | Starts faster and uses less GPU. First run this once: `cp ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo/yolo11n.engine ~/Robotics_Assignment_4/` |
-| `MODEL_PATH` | `'yolo11s.pt'` | Slower, usually more accurate |
-| `PUBLISH_PERIOD` | `0.2` (5 times a second instead of 20) | The subscriber prints less often |
+Please change **one** value at a time, start the publisher again with the command in Step 9, and watch the subscriber and `tegrastats`. The following suggestions explain what each value does:
 
-**You should see:** the same kind of output as Step 9, only faster, slower or different, depending on your change. For `.engine` files you will also see lines starting with `[TRT]` and a note that it assumes `task=detect`. That is fine.
+- `MODEL_PATH = 'yolo11n.engine'` selects an optimized version of the model, which starts faster and uses less of the GPU. Before you use it for the first time, please run the following command. It copies the optimized file from the demonstration folder into the folder that contains the publisher.
 
-**What you learn:** The same program can be made faster or more accurate by changing one number. Faster models save power and keep the robot's reactions quick.
+```bash
+cp ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo/yolo11n.engine ~/Robotics_Assignment_4/
+```
 
----
+- `MODEL_PATH = 'yolo11s.pt'` selects the larger Small model, which is usually more accurate but slower.
+- `PUBLISH_PERIOD = 0.2` makes the publisher send 5 messages per second instead of 20, so the subscriber prints less often.
 
-## Step 11: 🎥 Record Clip 2: publisher and subscriber (Part B)
-
-**Do:** Start filming (phone or camera aimed at the screen and the robot). Run the publisher and the subscriber in two terminals side by side. Point the robot's camera at several objects (a person, a bottle, a laptop). Say out loud what each program does.
-
-**You should see (and show in the video):** the subscriber printing the objects that the publisher's camera sees.
-
-**What you learn:** You are showing that two separate programs can share information over ROS 2. The robot's driving program works the same way.
+Then you will see the same kind of output as in Step 10, but faster, slower, or different depending on your change. When you use an `.engine` file, you will also see some lines that begin with `[TRT]` and a note that the program assumes `task=detect`. This is normal.
 
 ---
 
-## Step 12: Read how the robot finds the bottle
+## Step 12: Record Clip 2 (Publisher and Subscriber)
 
-**Read:** This is how `bottle_pick_place.py` works. You do not need to understand the code.
+**Recording required:** Please record this step as one continuous video without editing. Please name the clip `Assignment4_Group<number>_Clip2`, for example `Assignment4_Group2_Clip2`.
 
-1. It listens to the YOLO channel (Step 9) and looks for a `bottle`.
-2. If the bottle's box is left or right of the middle of the picture, it turns the wheels to bring it back to the middle. This is called **visual servoing**.
-3. When the bottle is centered, it drives forward until the box is tall enough (the bottle is close).
-4. Then it moves the arm to home pose, opens the gripper, reaches forward, closes the gripper, and pulls back to home.
-5. To place the bottle, it drives back to where it started (using the wheel sensors) and sets the bottle down.
+**What you will learn:** You will show that two separate programs can share information with each other through ROS 2, which is the same way that the robot's driving program will receive the position of the bottle.
 
-**What you learn:** A robot can do a real task using just two things: *where* the object is (the box center) and *how close* it is (the box height). You will tune a few numbers that control each of those.
+Please film the computer screen and the robot with a phone or a camera, while one team member narrates. Please start the publisher in one terminal, and then start the subscriber in a second terminal, with the two terminals side by side on the screen. Please copy and paste the following command for the publisher and run it:
+
+```bash
+cd ~/Robotics_Assignment_4 && python3 yolo_publisher_sample_code.py
+```
+
+Then please copy and paste the following command in the second terminal for the subscriber and run it:
+
+```bash
+cd ~/Robotics_Assignment_4 && python3 yolo_subscriber_sample_code.py
+```
+
+Please point the robot's camera at several objects, for example a person, a bottle, and a laptop, and please explain aloud what each of the two programs does.
+
+Then you will see the subscriber printing the objects that the publisher's camera sees.
 
 ---
 
-## Step 13: Start the robot
+## Step 13: Understand How the Robot Finds the Bottle
 
-**Do:** **[Jetson]** Close the old programs. Make sure the robot has free space around it. Then start the robot's drivers in a terminal.
+**What you will learn:** You will learn that a robot can complete a real task using only two pieces of information: where the object is (the center of its box) and how close the object is (the height of its box). You will tune a few numbers that control each of these.
+
+Please read the following description of how the ready-made program `bottle_pick_place.py` works. You do not need to understand every line of its code, but you are encouraged to open it and read it.
+
+1. The program listens to the YOLO channel from Step 10 and looks for a bottle.
+2. If the center of the bottle's box is to the left or to the right of the middle of the picture, the program turns the wheels to bring the bottle back to the middle. This technique is called **visual servoing**.
+3. When the bottle is in the middle, the program drives forward until the box is tall enough, which means that the bottle is close.
+4. The program then moves the arm to the home pose, opens the gripper, reaches forward, closes the gripper, and pulls the arm back to the home pose with the bottle lifted.
+5. To place the bottle, the program drives back to the point where it started, using the wheel sensors, extends the arm, opens the gripper, and pulls the arm back.
+
+---
+
+## Step 14: Start the Robot
+
+**What you will learn:** You will learn which programs must be running before the driving program can work. The robot's drivers allow programs to move the wheels and the arm, and the publisher keeps sending what the camera sees.
+
+Please perform this step on the **Jetson**. Please make sure that there is free space around the robot, and please close any programs from the earlier steps. The following command starts the robot's drivers. It is the same command that you used in Assignment 3. Please copy and paste it and run it in a terminal:
 
 ```bash
 ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
 
-**You should see:** a lot of lines, ending with no red `ERROR` lines. (This is the same step as in Assignment 3.)
+Then you will see many lines of text, and none of them should be a red `ERROR`. The output will look something like this:
 
 ```text
 [INFO] [launch]: All log files can be found below /home/nvidia/.ros/log/...
@@ -270,48 +378,54 @@ ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 [ros2_control_node-1] [INFO] ...: Successfully loaded controller gripper_controller
 ```
 
-Then, in a **second Jetson terminal**, start the YOLO publisher again:
+Next, please open a **second** terminal on the Jetson. The following command starts the YOLO publisher again, which the driving program needs. Please copy and paste it and run it:
 
 ```bash
-cd ~/Robotics_Assignment_4
-python3 yolo_publisher_sample_code.py
+cd ~/Robotics_Assignment_4 && python3 yolo_publisher_sample_code.py
 ```
 
-**What you learn:** The robot's drivers let programs move the wheels and the arm. The publisher keeps sending what the camera sees. Both must be running for the next steps.
+Please leave both terminals running for the remaining steps.
 
 ---
 
-## Step 14: Copy your Assignment 3 values
+## Step 15: Reuse Your Assignment 3 Values
 
-**Do:** **[Remote PC]** Open your own Assignment 3 code (`~/turtlebot_docker/my_code/sample_code.py`, the one you submitted). Find these values. This command prints them for you (run it in a normal terminal on the laptop):
+**What you will learn:** You will learn how to reuse the work that you already did. In Assignment 3, you found the arm poses and the gripper values that work for your robot. The driving program needs the same four values, so you do not have to find them again.
+
+Please perform this step on the **Remote PC**. First, please open a terminal inside the Docker container. The following two commands start the container if it is not already running and then open a terminal inside it. If the container is already running, running the first command again does no harm. Please copy and paste them one after the other:
 
 ```bash
-grep -nE "LIN_VEL_STEP_SIZE|ANG_VEL_STEP_SIZE|GRIPPER_KEY_BINDINGS|'g'|'h'|'9'|'0'" ~/turtlebot_docker/my_code/sample_code.py
+cd ~/turtlebot_docker && HOST_UID=$(id -u) USER_HOME=$HOME docker compose up -d
 ```
+
+```bash
+docker exec -it remote_pc_humble bash
+```
+
+Next, the following command reads the four values from your own Assignment 3 file, `sample_code.py`, and prints them in exactly the form that the driving program needs. Please copy and paste it and run it inside the Docker terminal:
+
+```bash
+cd ~/my_code && python3 -c "import sample_code as a; print('HOME_POSE =', a.POSES['9']); print('EXTEND_POSE =', a.POSES['0']); print('GRIPPER_OPEN =', a.GRIPPER_KEY_BINDINGS['g']); print('GRIPPER_CLOSE =', a.GRIPPER_KEY_BINDINGS['h'])"
+```
+
+Then you will see something like this. Your numbers will be different, and you should use your own numbers.
 
 ```text
-32:LIN_VEL_STEP_SIZE = 0.01
-41:GRIPPER_KEY_BINDINGS = {
-42:    'g': 0.01,  # Open
-43:    'h': -0.01  # Close
-47:    '9': [0.0, 0.0, 0.0, 0.0],  # Home pose
-52:    '0': [0.0, 0.9, 0.0, 0.5],  # Extend arm forward
+HOME_POSE = [0.0, 0.0, 0.0, 0.0]
+EXTEND_POSE = [0.0, 0.9, 0.0, 0.5]
+GRIPPER_OPEN = 0.01
+GRIPPER_CLOSE = -0.01
 ```
 
-(Your numbers will be different. Use **yours**.)
+If you see `KeyError: '0'`, your Assignment 3 file does not yet contain the "extend arm forward" pose, so please add it to your Assignment 3 file first. If you see `No module named 'sample_code'`, your Assignment 3 file is stored in a different folder, so please change the folder name after `cd` to the folder that contains it.
 
-Now open `~/turtlebot_docker/my_code/Robotics_Assignment_4/bottle_pick_place.py` and copy your values into the settings block:
+Now please open the driving program in a text editor. The following command opens it in `nano`, using the same saving method as in Step 7. Please copy and paste it and run it in an ordinary terminal on the laptop, not in Docker:
 
-| In `bottle_pick_place.py` | Copy from your Assignment 3 code |
-| --- | --- |
-| `HOME_POSE` | The `'9'` (Home) entry in `POSES` |
-| `EXTEND_POSE` | The `'0'` (Extend Forward) entry in `POSES` |
-| `GRIPPER_OPEN` | The `'g'` value in `GRIPPER_KEY_BINDINGS` |
-| `GRIPPER_CLOSE` | The `'h'` value in `GRIPPER_KEY_BINDINGS` |
+```bash
+nano ~/turtlebot_docker/my_code/Robotics_Assignment_4/bottle_pick_place.py
+```
 
-Optional: if your robot moved well in Assignment 3, `LIN_VEL_STEP_SIZE` is a good hint for a safe, slow `FORWARD_VEL`.
-
-**You should see:** the settings block looks like this, with **your** numbers:
+Please find the following four placeholder lines in the settings block:
 
 ```python
 HOME_POSE = [0.0, 0.0, 0.0, 0.0]
@@ -320,78 +434,95 @@ GRIPPER_OPEN = 0.01
 GRIPPER_CLOSE = -0.01
 ```
 
-**What you learn:** You already found the arm poses and gripper values for this exact robot in Assignment 3. Reusing them means you don't have to find them again. The numbers in the file are only placeholders until you replace them.
+Please replace these four lines with the four lines that were printed on your screen. These are the only changes that you must make to the file at this point. The values that are in the file now are only placeholders.
 
 ---
 
-## Step 15: Find the "close enough" box height
+## Step 16: Find the "Close Enough" Box Height
 
-**Do:** **[Jetson]** Open a terminal and start the subscriber (Step 9). Hold the bottle at the distance where the robot's gripper could grab it. Read the second number of `Size`.
+**What you will learn:** You will learn how the robot decides when to stop driving. A taller box means a closer bottle, so the robot stops when the box reaches a height that you choose.
+
+Please perform the first part of this step on the **Jetson**. Please make sure that the YOLO publisher from Step 14 is still running. Please open a **third** terminal on the Jetson and start the subscriber. The following command starts it. Please copy and paste it and run it:
 
 ```bash
-cd ~/Robotics_Assignment_4
-python3 yolo_subscriber_sample_code.py
+cd ~/Robotics_Assignment_4 && python3 yolo_subscriber_sample_code.py
 ```
 
-**You should see:**
+Please hold the bottle at the distance from which the robot's gripper could grab it, and please read the second number after `Size`. Then you will see something like this:
 
 ```text
 [INFO] [...] [yolo_json_subscriber]:   [0] bottle (0.89) | Center: (640.0, 360.0), Size: 210.5x430.2
 ```
 
-Here the height is about `430`. In `bottle_pick_place.py`, set `STOP_BBOX_HEIGHT` a little below that number (for example `400`). Then close the subscriber with `Ctrl+C`.
+In this example, the height is about 430. Please press `Ctrl+C` to close the subscriber.
+
+Please perform the second part of this step on the **Remote PC**. Please open `bottle_pick_place.py` again with the `nano` command from Step 15, find the following line, and set it to a number that is slightly smaller than the height that you measured. For example, if you measured about 430, you can use 400:
 
 ```python
 STOP_BBOX_HEIGHT = 400
 ```
 
-**What you learn:** A taller box means a closer bottle. The robot stops when the box reaches this height. This is how it knows how far to drive.
-
 ---
 
-## Step 16: Run Stage 1: only turn toward the bottle
+## Step 17: Run Stage 1 (Turning Toward the Bottle)
 
-**Do:** **[Remote PC]** Make sure the laptop and the Jetson are on the same `small_blue_wifi` network, as in Assignment 3. Open a Docker shell (`docker exec -it remote_pc_humble bash`). Make sure `STAGE = "servo"` is set in the file (it is the default). Run the script. Place the bottle slowly in front of the robot and move it left and right. Press `Ctrl+C` any time to stop the robot.
+**What you will learn:** You will learn how the robot compares the center of the bottle with the middle of the picture and turns its wheels to reduce the difference. In this first stage, the robot only turns. It does not drive forward.
+
+Please perform this step on the **Remote PC**, inside the Docker terminal from Step 15. Please make sure that the setting `STAGE = "servo"` appears in `bottle_pick_place.py`, which is the default. The following two lines move into the folder that contains the driving program and start it. Please copy and paste them and run them, then place the bottle in front of the robot and move it slowly to the left and to the right. You can press `Ctrl+C` at any time to stop the robot.
 
 ```bash
 cd ~/my_code/Robotics_Assignment_4
 python3 bottle_pick_place.py
 ```
 
-**You should see:** the robot turns in place to face the bottle. It does not drive forward.
+Then you will see something like this, and the robot will turn in place to face the bottle:
 
 ```text
 [INFO] [1780000000.123456789] [bottle_pick_place]: STAGE = servo, looking for ['bottle']
 [INFO] [1780000000.223456789] [bottle_pick_place]: Tracking the bottle. Press Ctrl+C to stop.
 ```
 
-**What you learn:** The robot compares the bottle's center to the middle of the picture, and turns the wheels to shrink that gap. If it wobbles or lags, see the tuning table in Step 19.
+If the robot wobbles or reacts slowly, please see the tuning table in Step 20. You are encouraged to read `bottle_pick_place.py` to see how the turning command is calculated. You are not required to change anything in it other than the settings that this guide mentions.
 
 ---
 
-## Step 17: 🎥 Record Clip 3: visual servoing (Part C a)
+## Step 18: Record Clip 3 (Visual Servoing)
 
-**Do:** Start filming. Make sure the robot, the bottle and the terminal screen are all in view. Run `bottle_pick_place.py` with `STAGE = "servo"`. Move the bottle slowly in front of the robot. Say out loud what you see.
+**Recording required:** Please record this step as one continuous video without editing. Please name the clip `Assignment4_Group<number>_Clip3`, for example `Assignment4_Group2_Clip3`.
 
-**You should see (and show in the video):** the robot "locks onto" the bottle and keeps it in the center of the camera's view by turning left and right.
+**What you will learn:** You will show that the robot can use its camera to steer, which is the central idea of visual servoing.
 
-**What you learn:** This is visual servoing: using the camera to steer. Keep the clip short.
+Please film the computer screen, the robot, and the bottle with a phone or a camera, while one team member narrates. The setting `STAGE = "servo"` must be selected. Please copy and paste the following two lines and run them while you are filming:
+
+```bash
+cd ~/my_code/Robotics_Assignment_4
+python3 bottle_pick_place.py
+```
+
+Please move the bottle slowly in front of the robot, and please explain aloud what the robot is doing.
+
+Then you will see the robot lock onto the bottle and keep it in the center of the camera's view by turning left and right.
 
 ---
 
-## Step 18: Run Stage 2: pick up the bottle
+## Step 19: Run Stage 2 (Picking Up the Bottle)
 
-**Do:** **[Remote PC]** Open `bottle_pick_place.py` and change the stage. Put the bottle on the ground in front of the robot, slightly off-center, and run it again. Press `Ctrl+C` to stop the robot.
+**What you will learn:** You will learn how the same program drives forward and uses the arm and the gripper that you set up in Assignment 3.
+
+Please perform this step on the **Remote PC**. Please open `bottle_pick_place.py` with the `nano` command from Step 15, and please change the stage setting to the following:
 
 ```python
 STAGE = "pick"
 ```
 
+Please place the bottle on the ground in front of the robot, slightly to one side of the center. The following two lines start the program. Please copy and paste them and run them. You can press `Ctrl+C` at any time to stop the robot.
+
 ```bash
+cd ~/my_code/Robotics_Assignment_4
 python3 bottle_pick_place.py
 ```
 
-**You should see:** the robot turns to face the bottle, drives up to it, reaches forward, closes the gripper, and lifts the bottle.
+Then you will see something like this, and the robot will turn to face the bottle, drive up to it, reach forward, close the gripper, and lift the bottle:
 
 ```text
 [INFO] [1780000000.123456789] [bottle_pick_place]: STAGE = pick, looking for ['bottle']
@@ -403,54 +534,68 @@ python3 bottle_pick_place.py
 [INFO] [1780000036.623456789] [bottle_pick_place]: Pick complete.
 ```
 
-**What you learn:** The same program now also drives forward and uses the arm and gripper you set up in Assignment 3. If the robot does not do well, use the tuning table in Step 19.
+If the robot does not behave well, please continue to Step 20.
 
 ---
 
-## Step 19: Tune it (only if needed)
+## Step 20: Tune the Settings if Needed
 
-**Do:** If the robot does not behave well, change **one** value at a time in the settings block of `bottle_pick_place.py` and run it again.
+**What you will learn:** You will learn that real robots need tuning. Changing one number at a time and observing the result is how engineers find good values. This step is only needed if the robot does not behave well, so you may skip it if the robot already works.
 
-| Symptom | Setting to change |
+Please perform this step on the **Remote PC**. Please open `bottle_pick_place.py` with the `nano` command from Step 15. Please change **one** value at a time in the settings block, save the file, and run the program again with the command from Step 19. The following table lists common problems and the setting that usually fixes each of them.
+
+| What the robot does | What to change |
 | --- | --- |
-| Robot wobbles left and right around the bottle | Lower `TURN_GAIN`, or raise `CENTER_TOLERANCE_PX` |
-| Robot reacts slowly or lags behind the bottle | Raise `TURN_GAIN` |
-| Robot stops too far from or too close to the bottle | Change `STOP_BBOX_HEIGHT` (see Step 15) |
-| Robot drives too fast to track | Lower `FORWARD_VEL` |
-| Gripper misses or crushes the bottle | Adjust `EXTEND_POSE`, `GRIPPER_CLOSE` (start from your Assignment 3 values) |
-| Bottle is named as another object | Add the extra names to `TARGET_CLASSES`, for example `["bottle", "vase"]` |
-| Detections flicker on and off | Raise `MIN_CONFIDENCE` |
-| Robot does not get back to its start point (Step 21) | Change `RETURN_VEL`, `HOME_TOLERANCE` |
+| The robot wobbles left and right around the bottle. | Please lower `TURN_GAIN`, or raise `CENTER_TOLERANCE_PX`. |
+| The robot reacts slowly or lags behind the bottle. | Please raise `TURN_GAIN`. |
+| The robot stops too far from the bottle or too close to it. | Please change `STOP_BBOX_HEIGHT`, using the measurement method in Step 16. |
+| The robot drives too fast to follow the bottle. | Please lower `FORWARD_VEL`. |
+| The gripper misses the bottle or crushes it. | Please adjust `EXTEND_POSE` and `GRIPPER_CLOSE`, starting from your Assignment 3 values. |
+| YOLO names the bottle as another object. | Please add the other name to `TARGET_CLASSES`, for example `["bottle", "vase"]`. |
+| The detections flicker on and off. | Please raise `MIN_CONFIDENCE`. |
+| The robot does not return to its starting point in Step 22. | Please change `RETURN_VEL` or `HOME_TOLERANCE`. |
 
-**You should see:** the behaviour improves. Write down which numbers you changed and why. You will mention them in the next clip.
-
-**What you learn:** Real robots need tuning. Changing one number at a time, and watching what changes, is how engineers find good values.
+Then you will see the robot's behavior improve. Please write down which values you changed and why, because you will be asked to explain them in the next clip.
 
 ---
 
-## Step 20: 🎥 Record Clip 4: pick up the bottle (Part C b)
+## Step 21: Record Clip 4 (Picking Up the Bottle)
 
-**Do:** Start filming (robot, bottle and screen in view). Set `STAGE = "pick"`. Put the bottle on the ground in the camera's view, slightly off-center. Run the script. **Say out loud which settings you tuned and why.**
+**Recording required:** Please record this step as one continuous video without editing. Please name the clip `Assignment4_Group<number>_Clip4`, for example `Assignment4_Group2_Clip4`.
 
-**You should see (and show in the video):** the robot faces the bottle, drives to it, reaches out, grabs it and lifts it off the ground.
+**What you will learn:** You will practice explaining your choices, which is as important as having a robot that works.
 
-**What you learn:** You can explain your choices, which is as important as the robot working.
+Please film the computer screen, the robot, and the bottle with a phone or a camera, while one team member narrates. The setting `STAGE = "pick"` must be selected. Please place the bottle on the ground in the camera's view, slightly to one side of the center. Please copy and paste the following two lines and run them while you are filming:
+
+```bash
+cd ~/my_code/Robotics_Assignment_4
+python3 bottle_pick_place.py
+```
+
+While the robot works, please say aloud which settings you tuned and why you tuned them.
+
+Then you will see the robot face the bottle, drive to it, reach out, grab it, and lift it off the ground.
 
 ---
 
-## Step 21: Run Stage 3: pick up and place the bottle
+## Step 22: Run Stage 3 (Picking Up and Placing the Bottle)
 
-**Do:** **[Remote PC]** Set the stage to `"full"` and run it. The robot will drive back to where it started and put the bottle down. Keep the way clear and be ready to press `Ctrl+C`.
+**What you will learn:** You will learn that the robot remembers its starting point using its wheel sensors, which is called odometry, and that it can drive back to that point. The wheel sensors drift slightly, so the robot may not return to exactly the same place.
+
+Please perform this step on the **Remote PC**. Please open `bottle_pick_place.py` with the `nano` command from Step 15, and please change the stage setting to the following:
 
 ```python
 STAGE = "full"
 ```
 
+Please keep the path in front of the robot clear and be ready to press `Ctrl+C`. The following two lines start the program. Please copy and paste them and run them:
+
 ```bash
+cd ~/my_code/Robotics_Assignment_4
 python3 bottle_pick_place.py
 ```
 
-**You should see:** everything in Step 18, then the robot drives back and places the bottle.
+Then you will see everything from Step 19, followed by the following lines, as the robot drives back and puts the bottle down:
 
 ```text
 [INFO] [1780000036.623456789] [bottle_pick_place]: Returning to the start point.
@@ -458,41 +603,47 @@ python3 bottle_pick_place.py
 [INFO] [1780000064.823456789] [bottle_pick_place]: Pick and place complete.
 ```
 
-If the return takes too long, you will see this instead and the robot places the bottle where it is:
+If the return takes too long, you will see the following warning instead, and the robot will place the bottle where it is:
 
 ```text
 [WARN] [...] [bottle_pick_place]: Return timed out, placing the bottle here.
 ```
 
-**What you learn:** The robot remembers its start point from its wheel sensors (called odometry) and drives back to it. The wheel sensors drift a little, so it may not return exactly.
+---
+
+## Step 23: Record Clip 5 (Picking Up and Placing the Bottle)
+
+**Recording required:** Please record this step as one continuous video without editing. Please name the clip `Assignment4_Group<number>_Clip5`, for example `Assignment4_Group2_Clip5`.
+
+**What you will learn:** You will show the complete task in one recording: seeing the bottle, aiming at it, approaching it, grabbing it, carrying it, and placing it.
+
+Please film the computer screen, the robot, and the bottle with a phone or a camera, while one team member narrates. The setting `STAGE = "full"` must be selected. Please place the bottle on the ground in the camera's view, slightly to one side of the center, in the same way as in Clip 4. Please copy and paste the following two lines and run them while you are filming:
+
+```bash
+cd ~/my_code/Robotics_Assignment_4
+python3 bottle_pick_place.py
+```
+
+Then you will see the robot pick up the bottle, return near its starting position, and put the bottle on the ground.
 
 ---
 
-## Step 22: 🎥 Record Clip 5: pick and place (Part C c)
+## Step 24: Final Check and Submission
 
-**Do:** Start filming (robot, bottle and screen in view). Set `STAGE = "full"`. Test it the same way as Clip 4. Show that the robot returns near its starting spot and puts the bottle on the ground.
+**What you will learn:** You will confirm that you have everything that the assignment requires before you submit.
 
-**You should see (and show in the video):** pick, return, place, with the robot ending near where it started.
+Please check that each of the following five clips exists, and please tick every box before you submit.
 
-**What you learn:** You have now shown the full job: see, aim, approach, grab, carry, and place.
+- [ ] **Clip 1** (`Assignment4_Group<number>_Clip1`) shows the faces and names of all team members, YOLO detecting several objects, and the `tegrastats` window with the GPU value rising.
+- [ ] **Clip 2** (`Assignment4_Group<number>_Clip2`) shows the publisher and the subscriber running together, with the subscriber printing the objects that the camera sees.
+- [ ] **Clip 3** (`Assignment4_Group<number>_Clip3`) shows the setting `STAGE = "servo"`, with the robot keeping a slowly moving bottle in the center by turning left and right.
+- [ ] **Clip 4** (`Assignment4_Group<number>_Clip4`) shows the setting `STAGE = "pick"`, with the robot grabbing and lifting the bottle, while the narrator explains the tuned settings and the reasons for them.
+- [ ] **Clip 5** (`Assignment4_Group<number>_Clip5`) shows the setting `STAGE = "full"`, with the robot picking up the bottle, returning near its starting position, and placing the bottle on the ground.
 
----
+Please also confirm the following rules before you upload:
 
-## Step 23: Submit
+- [ ] Every clip is one continuous recording with no editing.
+- [ ] Every clip shows both the computer screen and the robot, with a team member narrating.
+- [ ] Every clip is named with the convention `Assignment4_Group<number>_Clip<number>`.
 
-You must submit **5 video clips**. Tick every box before you submit.
-
-- [ ] **Clip 1 (Part A): YOLO on the Jetson.** Shows every team member's face and name at the start. Shows boxes and labels on several objects, and `tegrastats` with `GR3D_FREQ` going up.
-- [ ] **Clip 2 (Part B): Publisher and subscriber.** Shows both programs running, and the subscriber printing the objects the camera sees.
-- [ ] **Clip 3 (Part C a): Visual servoing.** Shows `STAGE = "servo"`. The robot keeps the bottle in the center by turning left and right as you move the bottle slowly.
-- [ ] **Clip 4 (Part C b): Pick up the bottle.** Shows `STAGE = "pick"`. The robot faces the bottle, drives to it, grabs it and lifts it. The narrator says which settings were tuned and why.
-- [ ] **Clip 5 (Part C c): Pick and place.** Shows `STAGE = "full"`. The robot returns near its start spot and puts the bottle on the ground.
-
-For every clip: film the screen **and** the robot with a phone or camera while one team member narrates. You do not need to edit, and a few minutes in total is enough.
-
-**How to hand in**
-
-1. Upload each clip to YouTube and set it to **Unlisted**. Do not upload the raw video files to Canvas.
-2. **Every team member** pastes all 5 links into Canvas under **Assignment 4**, even if the team recorded the clips together.
-
-Source code is **not** required for this assignment.
+To submit, please upload each clip to YouTube and set its visibility to **Unlisted**, using the clip name as the title. Then every team member must paste all five links into Canvas under **Assignment 4**, even if the team recorded the clips together. Please do not upload the raw video files to Canvas. Source code is **not** required for this assignment.
