@@ -44,6 +44,24 @@ You will submit **five video clips**. Every step that requires a recording is ma
 
 ---
 
+## Before You Begin: What You Need and Which Terminal to Use
+
+**What you need from the earlier assignments.** Please make sure that you have the following, because this assignment builds on them.
+
+- **Assignment 1:** A working Docker container named `remote_pc_humble` on the Remote PC (the laptop). You should be able to open a terminal inside it.
+- **Assignment 3:** The four values that you found for your robot: the arm's home pose, the arm's extended pose, the gripper-open value, and the gripper-close value (`HOME_POSE`, `EXTEND_POSE`, `GRIPPER_OPEN`, and `GRIPPER_CLOSE`). They are stored in your Assignment 3 file, `sample_code.py`. Step 15 shows you how to reuse them.
+- **A bottle and free space:** A plastic or glass bottle that stands upright, and an empty floor area of about 2 meters in front of the robot.
+
+**Which terminal to use.** This assignment uses three kinds of terminals. Each step tells you which one to open, and the following table is a summary.
+
+| Terminal | Computer | WiFi network | Used in steps | What should keep running |
+| --- | --- | --- | --- | --- |
+| Jetson terminal | Jetson (on the robot) | Regular WiFi for Steps 5 to 7, then `small_blue_wifi` | 4 to 14, and 16 | `tegrastats` (Step 4). From Step 14: the robot drivers and the YOLO publisher |
+| Laptop terminal (ordinary, no Docker) | Remote PC | Regular WiFi for Step 5, then `small_blue_wifi` | 5, and editing files in 15 to 22 | Nothing |
+| Laptop Docker terminal | Remote PC, inside the container | `small_blue_wifi` | 15 to 23 | `bottle_pick_place.py`, only while a stage is running |
+
+---
+
 ## Step 1: Watch a Video About Docker
 
 **What you will learn:** This step is a short reminder of what a Docker container is, which you studied in Assignment 1. The step is optional, and you may skip it if you already understand Docker.
@@ -155,6 +173,8 @@ cd ~/Robotics_Assignment_4/Assignment_4_demo/CUDA_Demo
 python3 yolov11_demo.py
 ```
 
+**Please be patient the first time.** When you run `yolov11_demo.py` for the first time, it takes a couple of minutes before anything appears, because the model has to be loaded (and converted) for the first time. Please allow about 2 minutes, and please do not close the terminal or press `Ctrl+C` while you wait. Later runs start much faster.
+
 Please point the robot's camera at a few objects, such as a person, a bottle, and a laptop. When you are finished, please press the `Esc` key while the video window is selected to close it.
 
 Then you will see a video window with a box and a label around each object, for example `bottle 0.87` or `person 0.92`. The number is the confidence score. It is a value between 0 and 1 that shows how sure the model is about the detection. In the `tegrastats` window from Step 4, you will see the GPU value rise, for example:
@@ -162,6 +182,10 @@ Then you will see a video window with a box and a label around each object, for 
 ```text
 GR3D_FREQ 62% ...
 ```
+
+The terminal also prints one block of text for every image, which lists the objects that were found and how long each stage took. The following picture shows a real result. The terminal is on the left and the video window is on the right. In this example, YOLO found a bottle (0.86), a mouse (0.79), a teddy bear (0.27), and a dining table (0.27), and the video runs at about 26 frames per second (`FPS`). Your objects and numbers will be different.
+
+![YOLO11 running on the Jetson: the terminal lists the detected objects and the video window shows a labeled box around each object](yolo.png)
 
 You are encouraged to open `yolov11_demo.py` and read it. You are not required to change anything in it for this step.
 
@@ -401,9 +425,9 @@ Please leave both terminals running for the remaining steps.
 
 ---
 
-## Step 15: Reuse Your Assignment 3 Values
+## Step 15: Check the Connection and Reuse Your Assignment 3 Values
 
-**What you will learn:** You will learn how to reuse your earlier work. In Assignment 3, you found the arm poses and the gripper values that work for your robot. The driving program needs the same four values, so you do not have to find them again.
+**What you will learn:** You will learn how to confirm that the laptop can really see the robot before anything moves. This check is important, because without it a connection problem looks like a robot that does nothing, or a program that waits forever. You will also learn how to reuse your earlier work. In Assignment 3, you found the arm poses and the gripper values that work for your robot. The driving program needs the same four values, so you do not have to find them again.
 
 Please perform this step on the **Remote PC**. First, please open a terminal inside the Docker container. The following two commands start the container if it is not already running and then open a terminal inside it. If the container is already running, running the first command again does no harm. Please copy and paste them one after the other:
 
@@ -415,7 +439,40 @@ cd ~/turtlebot_docker && HOST_UID=$(id -u) USER_HOME=$HOME docker compose up -d
 docker exec -it remote_pc_humble bash
 ```
 
-Next, the following command reads the four values from your own Assignment 3 file, `sample_code.py`, and prints them in exactly the form that the driving program needs. Please copy and paste it and run it inside the Docker terminal:
+**Part A: Check the connection.** The following three checks confirm that the laptop can see the robot. Please make sure that the laptop is on `small_blue_wifi` and that the robot drivers and the YOLO publisher from Step 14 are still running on the Jetson. Please run each check inside the Docker terminal.
+
+*Check 1: Can the laptop see the YOLO detections?* The following command starts the same subscriber that you used in Step 10, but now on the laptop. Please copy and paste it and run it, and then point the camera at an object:
+
+```bash
+cd ~/my_code/Robotics_Assignment_4 && python3 yolo_subscriber_sample_code.py
+```
+
+Then you will see lines like the ones in Step 10, which list the detected objects. Please press `Ctrl+C` to stop it.
+
+*Check 2: Can the laptop see the robot's position (odometry)?* The following command prints one odometry message and then stops. Please copy and paste it and run it:
+
+```bash
+ros2 topic echo /odom --once
+```
+
+Then you will see a block of text that starts with `header:` and contains `pose:` and `twist:`.
+
+*Check 3: Can the laptop see the arm and the gripper?* The following command lists the available actions. Please copy and paste it and run it:
+
+```bash
+ros2 action list
+```
+
+Then you will see something like this. The two lines that start with `/arm_controller` and `/gripper_controller` must be in the list:
+
+```text
+/arm_controller/follow_joint_trajectory
+/gripper_controller/gripper_cmd
+```
+
+If a check shows nothing or only an error, the laptop cannot see the robot. Please check, in this order, that (1) both computers are connected to `small_blue_wifi`, (2) the robot drivers and the YOLO publisher are running on the Jetson, and (3) you are inside the Docker terminal. Please do not continue to Step 17 until all three checks work.
+
+**Part B: Reuse your Assignment 3 values.** Next, the following command reads the four values from your own Assignment 3 file, `sample_code.py`, and prints them in exactly the form that the driving program needs. Please copy and paste it and run it inside the Docker terminal:
 
 ```bash
 cd ~/my_code && python3 -c "import sample_code as a; print('HOME_POSE =', a.POSES['9']); print('EXTEND_POSE =', a.POSES['0']); print('GRIPPER_OPEN =', a.GRIPPER_KEY_BINDINGS['g']); print('GRIPPER_CLOSE =', a.GRIPPER_KEY_BINDINGS['h'])"
@@ -453,7 +510,7 @@ Please replace these four lines with the four lines that were printed on your sc
 
 ## Step 16: Find the "Close Enough" Box Height
 
-**What you will learn:** You will learn how the robot decides when to stop driving. A taller box means a closer bottle, so the robot stops when the box reaches a height that you choose.
+**What you will learn:** You will learn how the robot decides when to stop driving. The robot cannot measure distance directly. Instead, it uses the height of the bottle's box in the camera image, measured in pixels. A taller box means a closer bottle, so the robot stops when the box reaches a height that you choose.
 
 Please perform the first part of this step on the **Jetson**. Please make sure that the YOLO publisher from Step 14 is still running. Please open a **third** terminal on the Jetson and start the subscriber. The following command starts it. Please copy and paste it and run it:
 
@@ -461,13 +518,13 @@ Please perform the first part of this step on the **Jetson**. Please make sure t
 cd ~/Robotics_Assignment_4 && python3 yolo_subscriber_sample_code.py
 ```
 
-Please hold the bottle at the distance from which the robot's gripper could grab it, which is the height of the box in pixels. Then you will see something like this:
+Please place the bottle upright, in front of the camera, at the distance where the gripper can reach it. In the subscriber output, please read the **second** number after `Size:`. That number is the height of the bounding box in pixels, and the first number is its width. Then you will see something like this:
 
 ```text
 [INFO] [...] [yolo_json_subscriber]:   [0] bottle (0.89) | Center: (640.0, 360.0), Size: 210.5x430.2
 ```
 
-In this example, the height is about 430. Please press `Ctrl+C` to close the subscriber.
+In this example, the width is 210.5 and the height is about 430. The numbers in this example are only an illustration, and your own number will be different. Please press `Ctrl+C` to close the subscriber.
 
 Please perform the second part of this step on the **Remote PC**. Please open `bottle_pick_place.py` again with the `nano` command from Step 15, find the following line, and set it to a number that is slightly smaller than the height that you measured. For example, if you measured about 430, you can use 400:
 
